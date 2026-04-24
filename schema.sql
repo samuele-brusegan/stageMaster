@@ -1,6 +1,6 @@
 -- Creazione Database
-CREATE DATABASE IF NOT EXISTS talent_manager;
-USE talent_manager;
+CREATE DATABASE IF NOT EXISTS olmos_talent;
+USE olmos_talent;
 
 -- Tabella Talenti e Performance
 CREATE TABLE talenti (

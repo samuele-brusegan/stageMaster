@@ -1,0 +1,226 @@
+<?php
+
+require_once BASE_PATH . '/app/Controllers/Controller.php';
+
+class MediaLibraryController extends Controller {
+
+    protected function json($data, $status = 200) {
+        header('Content-Type: application/json');
+        http_response_code($status);
+        echo json_encode($data);
+        exit;
+    }
+
+    private $db;
+    private $mediaLibrary;
+
+    public function __construct() {
+        $this->db = (new DatabaseConnector())->getConnection();
+        $this->mediaLibrary = new \App\Models\MediaLibrary($this->db);
+    }
+
+    /**
+     * Get all media
+     */
+    public function index() {
+        try {
+            $media = $this->mediaLibrary->getAll();
+            $this->json(['status' => 'ok', 'data' => $media]);
+        } catch (\Exception $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Upload a new media file
+     */
+    public function upload() {
+        try {
+            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
+                $this->json(['status' => 'error', 'message' => 'No file uploaded or upload error'], 400);
+            }
+
+            $file = $_FILES['file'];
+            $fileName = $file['name'];
+            $fileTmp = $file['tmp_name'];
+            $fileSize = $file['size'];
+            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            // Determine file type
+            $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+            $audioExts = ['mp3', 'wav', 'ogg', 'flac'];
+
+            if (in_array($fileExt, $imageExts)) {
+                $fileType = 'FOTO';
+            } elseif (in_array($fileExt, $videoExts)) {
+                $fileType = 'VIDEO';
+            } elseif (in_array($fileExt, $audioExts)) {
+                $fileType = 'AUDIO';
+            } else {
+                $this->json(['status' => 'error', 'message' => 'Unsupported file type'], 400);
+            }
+
+            // Generate unique filename
+            $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+            $uniqueName = $baseName . '_' . time() . '.' . $fileExt;
+            $uploadPath = __DIR__ . '/../../public/media/' . $uniqueName;
+            $webPath = '/media/' . $uniqueName;
+
+            // Move file
+            if (!move_uploaded_file($fileTmp, $uploadPath)) {
+                $this->json(['status' => 'error', 'message' => 'Failed to move uploaded file'], 500);
+            }
+
+            // Get duration for video/audio (requires ffprobe)
+            $durationSec = null;
+            if ($fileType === 'VIDEO' || $fileType === 'AUDIO') {
+                $durationSec = $this->getMediaDuration($uploadPath);
+            }
+
+            // Save to database
+            $mediaId = $this->mediaLibrary->create([
+                'file_name' => $fileName,
+                'file_path' => $webPath,
+                'file_type' => $fileType,
+                'file_size' => $fileSize,
+                'duration_sec' => $durationSec
+            ]);
+
+            $this->json([
+                'status' => 'ok',
+                'data' => [
+                    'id' => $mediaId,
+                    'file_name' => $fileName,
+                    'file_path' => $webPath,
+                    'file_type' => $fileType,
+                    'file_size' => $fileSize,
+                    'duration_sec' => $durationSec
+                ]
+            ]);
+        } catch (\Exception $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Get media duration using ffprobe
+     */
+    private function getMediaDuration($filePath) {
+        $output = shell_exec("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " . escapeshellarg($filePath) . " 2>&1");
+        if ($output && is_numeric($output)) {
+            return (int) $output;
+        }
+        return null;
+    }
+
+    /**
+     * Delete media
+     */
+    public function delete() {
+        try {
+            $id = $_GET['id'] ?? null;
+            if (!$id) {
+                $this->json(['status' => 'error', 'message' => 'Missing media ID'], 400);
+            }
+
+            $media = $this->mediaLibrary->find($id);
+            if (!$media) {
+                $this->json(['status' => 'error', 'message' => 'Media not found'], 404);
+            }
+
+            // Delete file
+            $filePath = __DIR__ . '/../../public' . $media['file_path'];
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+
+            // Delete from database
+            $this->mediaLibrary->delete($id);
+
+            $this->json(['status' => 'ok', 'message' => 'Media deleted']);
+        } catch (\Exception $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Scan media directory for unregistered files
+     */
+    public function scan() {
+        try {
+            $mediaDir = __DIR__ . '/../../public/media';
+            $files = scandir($mediaDir);
+            $unregistered = [];
+
+            $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+            $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+            $audioExts = ['mp3', 'wav', 'ogg', 'flac'];
+
+            foreach ($files as $file) {
+                if ($file === '.' || $file === '..' || $file === '.gitkeep') {
+                    continue;
+                }
+
+                $filePath = '/media/' . $file;
+                $existing = $this->mediaLibrary->findByPath($filePath);
+
+                if (!$existing) {
+                    $fileExt = strtolower(pathinfo($file, PATHINFO_EXTENSION));
+                    $fullPath = $mediaDir . '/' . $file;
+                    $fileSize = file_exists($fullPath) ? filesize($fullPath) : 0;
+
+                    if (in_array($fileExt, $imageExts)) {
+                        $fileType = 'FOTO';
+                    } elseif (in_array($fileExt, $videoExts)) {
+                        $fileType = 'VIDEO';
+                    } elseif (in_array($fileExt, $audioExts)) {
+                        $fileType = 'AUDIO';
+                    } else {
+                        continue;
+                    }
+
+                    $unregistered[] = [
+                        'file_name' => $file,
+                        'file_path' => $filePath,
+                        'file_type' => $fileType,
+                        'file_size' => $fileSize
+                    ];
+                }
+            }
+
+            $this->json(['status' => 'ok', 'data' => $unregistered]);
+        } catch (\Exception $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Register scanned media files
+     */
+    public function register() {
+        try {
+            $input = json_decode(file_get_contents('php://input'), true);
+            $files = $input['files'] ?? [];
+
+            $registered = [];
+            foreach ($files as $file) {
+                $existing = $this->mediaLibrary->findByPath($file['file_path']);
+                if (!$existing) {
+                    $mediaId = $this->mediaLibrary->create([
+                        'file_name' => $file['file_name'],
+                        'file_path' => $file['file_path'],
+                        'file_type' => $file['file_type'],
+                        'file_size' => $file['file_size'],
+                        'duration_sec' => null
+                    ]);
+                    $registered[] = ['id' => $mediaId, 'file_name' => $file['file_name']];
+                }
+            }
+
+            $this->json(['status' => 'ok', 'data' => $registered]);
+        } catch (\Exception $e) {
+            $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
+        }
+    }
+}

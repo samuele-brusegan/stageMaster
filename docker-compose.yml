@@ -10,10 +10,11 @@ services:
       SERVICE_NAME: app
       SERVICE_TAGS: dev
     ports:
-      - "8080:80"
+      - "8082:80"
     volumes:
       - .:/var/www/html
       - ./public/assets:/var/www/html/public/assets
+      - media_volume:/var/www/html/public/media
     networks:
       - olmos-network
     depends_on:
@@ -25,7 +26,7 @@ services:
     restart: unless-stopped
     tty: true
     ports:
-      - "3306:3306"
+      - "3307:3306"
     environment:
       MYSQL_DATABASE: olmos_talent
       MYSQL_ROOT_PASSWORD: root_password
@@ -56,4 +57,6 @@ networks:
 
 volumes:
   dbdata:
+    driver: local
+  media_volume:
     driver: local

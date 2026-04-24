@@ -17,10 +17,10 @@ function getDatabaseConnection() {
         }
     }
 
-    $host = $_ENV['DB_HOST'] ?? 'localhost';
-    $db   = $_ENV['DB_NAME'] ?? 'talent_manager';
-    $user = $_ENV['DB_USERNAME'] ?? 'root';
-    $pass = $_ENV['DB_PASSWORD'] ?? '';
+    $host = $_ENV['DB_HOST'] ?? 'db';
+    $db   = $_ENV['DB_NAME'] ?? 'olmos_talent';
+    $user = $_ENV['DB_USERNAME'] ?? 'olmos_user';
+    $pass = $_ENV['DB_PASSWORD'] ?? 'user_password';
     $charset = 'utf8mb4';
 
     $dsn = "mysql:host=$host;dbname=$db;charset=$charset";

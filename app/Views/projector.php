@@ -28,7 +28,11 @@
         const overlay = document.getElementById('fade-overlay');
         const syncOverlay = document.getElementById('sync-overlay');
         
-        console.log("Proiettore: Inizializzazione...");
+        // Get screen_id from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const screenId = urlParams.get('screen_id') || 1;
+        
+        console.log("Proiettore: Inizializzazione per screen_id:", screenId);
 
         function activateSync() {
             initAudio();
@@ -86,8 +90,15 @@
         window.addEventListener('storage', (e) => {
             if (e.key === 'regia_command') {
                 const command = JSON.parse(e.newValue);
-                console.log("Proiettore: Comando ricevuto:", command);
-                handleCommand(command);
+                // Only handle commands for this screen or global commands
+                if (!command.screenId || command.screenId == screenId) {
+                    console.log("Proiettore: Comando ricevuto:", command);
+                    handleCommand(command);
+                }
+            } else if (e.key === `screen_sync_${screenId}`) {
+                const state = JSON.parse(e.newValue);
+                console.log("Proiettore: Sync ricevuto dalla dashboard:", state);
+                syncFromDashboard(state);
             }
         });
 
@@ -128,16 +139,33 @@
             }
         }
 
+        function syncFromDashboard(state) {
+            if (state.src && state.src !== video.src) {
+                video.src = state.src;
+                video.load();
+            }
+            if (state.currentTime !== undefined) {
+                video.currentTime = state.currentTime;
+            }
+            if (state.playing && video.paused) {
+                video.play().catch(err => console.error("Errore play sync:", err));
+            } else if (!state.playing && !video.paused) {
+                video.pause();
+            }
+        }
+
         // Status Reporting
         setInterval(() => {
             const status = {
+                screenId: screenId,
                 currentTime: video.currentTime,
                 duration: video.duration,
                 mediaName: video.src ? video.src.split('/').pop() : 'Nessuno',
                 playing: !video.paused,
+                active: !video.paused,
                 timestamp: Date.now()
             };
-            localStorage.setItem('projector_status', JSON.stringify(status));
+            localStorage.setItem('screen_state', JSON.stringify(status));
         }, 500);
 
         // Auto-end monitoring

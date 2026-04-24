@@ -25,4 +25,7 @@ class Controller {
     function admin() {
         $this->render('admin');
     }
+    function timeline() {
+        $this->render('timeline');
+    }
 }
