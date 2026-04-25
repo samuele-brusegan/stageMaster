@@ -1,0 +1,69 @@
+name: Run Tests
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-php:
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_DATABASE: olmos_talent_test
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: pdo, pdo_mysql
+        coverage: none
+    
+    - name: Validate composer.json
+      run: composer validate
+    
+    - name: Install dependencies
+      run: composer install --prefer-dist --no-progress --no-interaction
+    
+    - name: Create test database
+      run: |
+        mysql -h 127.0.0.1 -u root -proot_password -e "CREATE DATABASE IF NOT EXISTS olmos_talent_test;"
+    
+    - name: Run PHPUnit tests
+      run: ./vendor/bin/phpunit --testdox
+      env:
+        DB_HOST: 127.0.0.1
+        DB_PORT: 3306
+        DB_NAME: olmos_talent_test
+        DB_USERNAME: root
+        DB_PASSWORD: root_password
+
+  test-js:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Run Jest tests
+      run: npm test

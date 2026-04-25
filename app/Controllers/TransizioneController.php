@@ -1,15 +1,8 @@
 <?php
 
-require_once BASE_PATH . '/app/Controllers/Controller.php';
+require_once BASE_PATH . '/app/Controllers/ApiController.php';
 
-class TransizioneController extends Controller {
-    
-    protected function json($data, $status = 200) {
-        header('Content-Type: application/json');
-        http_response_code($status);
-        echo json_encode($data);
-        exit;
-    }
+class TransizioneController extends ApiController {
 
     public function show() {
         header('Content-Type: application/json');

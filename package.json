@@ -1,0 +1,25 @@
+{
+  "name": "stagemaster",
+  "version": "1.0.0",
+  "description": "Talent Show Management System",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0"
+  },
+  "jest": {
+    "testEnvironment": "jsdom",
+    "testMatch": [
+      "**/tests/js/**/*.test.js"
+    ],
+    "collectCoverageFrom": [
+      "public/**/*.js",
+      "!public/**/*.min.js"
+    ]
+  }
+}

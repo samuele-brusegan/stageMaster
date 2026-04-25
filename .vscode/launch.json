@@ -1,0 +1,81 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Listen for Xdebug",
+            "type": "php",
+            "request": "launch",
+            "port": 9003,
+            "pathMappings": {
+                "${workspaceRoot}": "${workspaceRoot}"
+            }
+        },
+        {
+            "name": "Run All PHPUnit Tests",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceRoot}/vendor/bin/phpunit",
+            "args": [
+                "--testdox"
+            ],
+            "cwd": "${workspaceRoot}",
+            "runtimeArgs": [
+                "-dxdebug.mode=debug",
+                "-dxdebug.start_with_request=yes",
+                "-dxdebug.client_port=9003"
+            ],
+            "port": 9003,
+            "env": {
+                "DB_HOST": "127.0.0.1",
+                "DB_PORT": "3308",
+                "DB_NAME": "olmos_talent_test",
+                "DB_USERNAME": "root",
+                "DB_PASSWORD": "root_password"
+            }
+        },
+        {
+            "name": "Run Specific PHPUnit Test",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceRoot}/vendor/bin/phpunit",
+            "args": [
+                "${relativeFile}"
+            ],
+            "cwd": "${workspaceRoot}",
+            "runtimeArgs": [
+                "-dxdebug.mode=debug",
+                "-dxdebug.start_with_request=yes",
+                "-dxdebug.client_port=9003"
+            ],
+            "port": 9003,
+            "env": {
+                "DB_HOST": "127.0.0.1",
+                "DB_PORT": "3308",
+                "DB_NAME": "olmos_talent_test",
+                "DB_USERNAME": "root",
+                "DB_PASSWORD": "root_password"
+            }
+        },
+        {
+            "name": "Run PHPUnit with Coverage",
+            "type": "php",
+            "request": "launch",
+            "program": "${workspaceRoot}/vendor/bin/phpunit",
+            "args": [
+                "--coverage-text",
+                "--coverage-html=coverage"
+            ],
+            "cwd": "${workspaceRoot}",
+            "runtimeArgs": [
+                "-dxdebug.mode=coverage"
+            ],
+            "env": {
+                "DB_HOST": "127.0.0.1",
+                "DB_PORT": "3308",
+                "DB_NAME": "olmos_talent_test",
+                "DB_USERNAME": "root",
+                "DB_PASSWORD": "root_password"
+            }
+        }
+    ]
+}

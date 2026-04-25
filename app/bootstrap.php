@@ -1,6 +1,6 @@
 <?php
 define('BASE_PATH', dirname(__DIR__));
-define('URL_PATH', 'olmosgottalent-manager/public'); // Update this if the app is in a subdirectory
+define('URL_PATH', 'stageMaster/public'); // Update this if the app is in a subdirectory
 define('URL', 'http://localhost'); // Base URL
 define('THEME', 'dark');
 

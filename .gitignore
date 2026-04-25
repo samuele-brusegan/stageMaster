@@ -5,3 +5,7 @@
 .env
 data/
 bak*
+vendor/
+coverage/
+.phpunit.cache/
+node_modules/

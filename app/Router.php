@@ -39,6 +39,7 @@ class Router {
     private function send404($message = "") {
         header("HTTP/1.0 404 Not Found");
         echo "404 Not Found: " . $message;
-        exit;
+        // Removed exit() to make the router testable
+        // The calling code should handle stopping execution if needed
     }
 }

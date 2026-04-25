@@ -3,30 +3,28 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: olmos-app
+    container_name: stagemaster-app
     restart: unless-stopped
     tty: true
     environment:
       SERVICE_NAME: app
       SERVICE_TAGS: dev
     ports:
-      - "8082:80"
+      - "31415:80"
     volumes:
       - .:/var/www/html
       - ./public/assets:/var/www/html/public/assets
       - media_volume:/var/www/html/public/media
     networks:
-      - olmos-network
+      - stagemaster-network
     depends_on:
       - db
 
   db:
     image: mysql:8.0
-    container_name: olmos-db
+    container_name: stagemaster-db
     restart: unless-stopped
     tty: true
-    ports:
-      - "3307:3306"
     environment:
       MYSQL_DATABASE: olmos_talent
       MYSQL_ROOT_PASSWORD: root_password
@@ -35,24 +33,24 @@ services:
     volumes:
       - dbdata:/var/lib/mysql
     networks:
-      - olmos-network
+      - stagemaster-network
 
-  phpmyadmin:
-    image: phpmyadmin:5.2
-    container_name: olmos-phpmyadmin
-    restart: unless-stopped
-    ports:
-      - "8081:80"
-    environment:
-      PMA_HOST: db
-      MYSQL_ROOT_PASSWORD: root_password
-    networks:
-      - olmos-network
-    depends_on:
-      - db
+#  phpmyadmin:
+#    image: phpmyadmin:5.2
+#    container_name: stagemaster-phpmyadmin
+#    restart: unless-stopped
+#    ports:
+#      - "8081:80"
+#    environment:
+#      PMA_HOST: db
+#      MYSQL_ROOT_PASSWORD: root_password
+#    networks:
+#      - stagemaster-network
+#    depends_on:
+#      - db
 
 networks:
-  olmos-network:
+  stagemaster-network:
     driver: bridge
 
 volumes:

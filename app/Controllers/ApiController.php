@@ -63,7 +63,7 @@ class ApiController extends Controller {
         header('Content-Type: application/json');
         try {
             $data = json_decode(file_get_contents('php://input'), true);
-            $orderedIds = $data['ids'] ?? [];
+            $orderedIds = $data['ordered_ids'] ?? [];
             
             $db = (new DatabaseConnector())->getConnection();
             $talentoModel = new \App\Models\Talento($db);

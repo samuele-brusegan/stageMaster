@@ -1,7 +1,7 @@
 <?php
 /*
- * Copyright (c) 2025. Brusegan Samuele, Davanzo Andrea
- * Questo file fa parte di GradeCraft ed è rilasciato
+ * Copyright (c) 2025. Brusegan Samuele
+ * Questo file fa parte di StageMaster ed è rilasciato
  * sotto la licenza MIT. Vedere il file LICENSE per i dettagli.
  */
 global $router;
@@ -13,6 +13,9 @@ $router->add('/'                        , 'Controller', 'index');
 $router->add('/api/talenti'             , 'TalentoController', 'list');
 $router->add('/api/talento'              , 'TalentoController', 'show');
 $router->add('/api/talento/reorder'      , 'TalentoController', 'reorder');
+$router->add('/api/talenti/aggiungi'    , 'ApiController', 'addTalento');
+$router->add('/api/talenti/elimina'     , 'ApiController', 'deleteTalento');
+$router->add('/api/talenti/riordina'    , 'ApiController', 'reorderTalento');
 
 // === API Media ===
 $router->add('/api/media/talento'       , 'MediaController', 'getByTalento');
@@ -27,12 +30,6 @@ $router->add('/projector'               , 'Controller', 'projector');
 $router->add('/gobbo'                   , 'Controller', 'gobbo');
 $router->add('/admin'                   , 'Controller', 'admin');
 $router->add('/timeline'                , 'Controller', 'timeline');
-
-// === API ===
-$router->add('/api/talenti'             , 'ApiController', 'getTalenti');
-$router->add('/api/talenti/aggiungi'    , 'ApiController', 'addTalento');
-$router->add('/api/talenti/elimina'     , 'ApiController', 'deleteTalento');
-$router->add('/api/talenti/riordina'    , 'ApiController', 'reorderTalento');
 
 // === API Screens ===
 $router->add('/api/screens'              , 'ScreenController', 'index');
