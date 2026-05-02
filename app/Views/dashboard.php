@@ -70,12 +70,12 @@
         .dashboard-timeline-row {
             position: relative;
             min-width: var(--timeline-width, 720px);
-            height: 2.75rem;
+            height: 2rem;
             background-image: repeating-linear-gradient(to right, rgba(148, 163, 184, 0.16) 0, rgba(148, 163, 184, 0.16) 1px, transparent 1px, transparent 40px);
         }
         .dashboard-timeline-axis {
             min-width: var(--timeline-width, 720px);
-            height: 1.35rem;
+            height: 1.1rem;
             background-image: repeating-linear-gradient(to right, rgba(148, 163, 184, 0.16) 0, rgba(148, 163, 184, 0.16) 1px, transparent 1px, transparent 40px);
         }
         .dashboard-playhead {
@@ -592,6 +592,25 @@
                 timeline.innerHTML = '<div class="w-full text-center text-slate-500 text-sm">Nessun media nello slot</div>';
                 return;
             }
+            const pxPerSecond = 4;
+            const maxEnd = Math.max(30, ...media.map(item => {
+                const start = timelineSeconds(item.timestamp_inizio);
+                const duration = Number(item.durata_totale_sec) || Math.max(10, timelineSeconds(item.timestamp_fine) - start || 10);
+                return start + duration;
+            }));
+            const width = Math.max(720, maxEnd * pxPerSecond + 80);
+            const axis = document.createElement('div');
+            axis.className = 'flex items-end gap-2 mb-1 text-[10px] text-slate-500';
+            axis.innerHTML = `<div class="w-20 shrink-0"></div><div class="dashboard-timeline-axis rounded border border-slate-800 relative" style="--timeline-width:${width}px;width:${width}px"></div>`;
+            const axisTrack = axis.querySelector('.dashboard-timeline-axis');
+            for (let sec = 0; sec <= maxEnd; sec += 10) {
+                const tick = document.createElement('div');
+                tick.className = 'absolute top-0 border-l border-slate-600 pl-1';
+                tick.style.left = `${sec * pxPerSecond}px`;
+                tick.textContent = `${sec}s`;
+                axisTrack.appendChild(tick);
+            }
+            timeline.appendChild(axis);
             const byScreen = {};
             media.forEach(item => {
                 const key = item.screen_id || 'none';
@@ -600,21 +619,37 @@
             });
             Object.entries(byScreen).forEach(([screenId, items]) => {
                 const row = document.createElement('div');
-                row.className = 'flex items-start gap-2 mb-2';
+                row.className = 'flex items-center gap-2 mb-1';
                 const label = items[0].screen_nome || (screenId === 'none' ? 'No screen' : `Screen ${screenId}`);
                 const blocks = items.map(item => {
                     const color = item.tipo_media === 'FOTO' ? 'yellow' : item.tipo_media === 'AUDIO' ? 'green' : 'blue';
-                    return `<div class="media-slot inline-flex items-center max-w-full rounded-md bg-${color}-500/12 border border-${color}-500/25 px-3 py-2 text-[11px]">
+                    const start = timelineSeconds(item.timestamp_inizio);
+                    const duration = Number(item.durata_totale_sec) || Math.max(10, timelineSeconds(item.timestamp_fine) - start || 10);
+                    return `<div class="media-slot absolute top-1 h-7 rounded bg-${color}-500/12 border border-${color}-500/25 px-2 flex items-center text-[10px]" style="left:${start * pxPerSecond}px;width:${Math.max(44, duration * pxPerSecond)}px">
                         <span class="font-semibold truncate">${item.friendly_name || item.file_path.split('/').pop()}</span>
                     </div>`;
                 }).join('');
-                row.innerHTML = `<div class="w-20 shrink-0 text-[10px] text-yellow-400 text-right pt-2">${label}</div><div class="flex flex-wrap gap-2 rounded border border-slate-800 px-2 py-2 bg-slate-950/40">${blocks}</div>`;
+                row.innerHTML = `<div class="w-20 shrink-0 text-[10px] text-yellow-400 text-right pt-1">${label}</div><div class="dashboard-timeline-row rounded border border-slate-800 overflow-hidden" style="--timeline-width:${width}px;width:${width}px">${blocks}<div class="dashboard-playhead" data-playhead></div></div>`;
                 timeline.appendChild(row);
             });
+            updateDashboardPlayhead();
         }
 
         function updateDashboardPlayhead() {
-            return;
+            const elapsed = Math.max(0, elapsedSlotMs() / 1000);
+            document.querySelectorAll('.dashboard-timeline-row').forEach(row => {
+                const width = row.getBoundingClientRect().width || 720;
+                let playhead = row.querySelector('[data-playhead]');
+                if (!playhead) {
+                    playhead = document.createElement('div');
+                    playhead.className = 'dashboard-playhead';
+                    playhead.dataset.playhead = 'true';
+                    row.appendChild(playhead);
+                }
+                const left = Math.min(width, elapsed * 4);
+                playhead.style.left = `${left}px`;
+                playhead.style.opacity = slotClock.running || slotClock.slotId ? '1' : '0';
+            });
         }
 
         async function createScreen(type) {

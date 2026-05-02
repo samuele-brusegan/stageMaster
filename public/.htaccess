@@ -1,5 +1,10 @@
 RewriteEngine On
 
+php_value upload_max_filesize 256M
+php_value post_max_size 256M
+php_value max_file_uploads 20
+php_value memory_limit 512M
+
 # Riscrive la base dell'URL per le richieste
 RewriteBase /
 

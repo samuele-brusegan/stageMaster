@@ -15,7 +15,7 @@ class TalentoController extends ApiController {
      */
     public function list() {
         $talenti = $this->talentoModel->getScaletta();
-        $this->json($talenti);
+        $this->json(['status' => 'ok', 'data' => $talenti]);
     }
 
     /**

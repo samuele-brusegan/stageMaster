@@ -55,6 +55,16 @@ class NoteController extends ApiController {
         header('Content-Type: application/json');
         try {
             $data = json_decode(file_get_contents('php://input'), true);
+            if (!is_array($data)) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Payload JSON non valido']);
+                return;
+            }
+            if (empty($data['tipo']) || empty($data['contenuto'])) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Tipo e contenuto sono obbligatori']);
+                return;
+            }
             $db = (new DatabaseConnector())->getConnection();
             $noteModel = new \App\Models\NoteTecniche($db);
             

@@ -17,10 +17,13 @@ Talent Show Management System - A comprehensive web application for managing tal
 
 - **Backend**: PHP 8.2+ with custom MVC architecture
 - **Database**: MySQL 8.0
-- **Frontend**: JavaScript, TailwindCSS
-- **Web Server**: Apache
+- **Frontend**: JavaScript (ES6+), TailwindCSS
+- **Testing**:
+  - PHPUnit 10.5 for PHP unit tests
+  - Jest 29.x for JavaScript unit tests
+  - Playwright for E2E browser testing
 - **Containerization**: Docker & Docker Compose
-- **Testing**: PHPUnit (PHP), Jest (JavaScript)
+- **CI/CD**: GitHub Actions
 - **Debugging**: Xdebug 3.4
 
 ## Prerequisites
@@ -120,6 +123,25 @@ Run tests in watch mode:
 npm run test:watch
 ```
 
+### E2E Tests (Playwright)
+
+Run all E2E tests (requires running application):
+```bash
+npm run test:e2e
+```
+
+Run E2E tests with UI mode:
+```bash
+npm run test:e2e:ui
+```
+
+Run E2E tests in headed mode (visible browser):
+```bash
+npm run test:e2e:headed
+```
+
+Note: Playwright tests require the application to be running. Use `docker compose up -d` or `php -S localhost:31415 -t public` before running E2E tests.
+
 ### VS Code Debugging
 
 The project includes a `.vscode/launch.json` configuration for debugging tests:
@@ -149,16 +171,28 @@ stageMaster/
 │   ├── index.php       # Entry point
 │   └── routes.php      # Route definitions
 ├── tests/
-│   ├── Unit/           # Unit tests
+│   ├── Unit/           # PHP unit tests
 │   │   ├── Controllers/
 │   │   └── Models/
-│   ├── js/             # JavaScript tests
+│   ├── js/             # JavaScript unit tests (Jest)
+│   ├── e2e/            # End-to-end tests (Playwright)
 │   ├── TestCase.php    # Base test class
 │   └── bootstrap.php   # Test bootstrap
 ├── docker-compose.yml  # Docker configuration
 ├── composer.json       # PHP dependencies
 ├── package.json        # JavaScript dependencies
-└── phpunit.xml        # PHPUnit configuration
+├── phpunit.xml         # PHPUnit configuration
+└── playwright.config.ts # Playwright E2E test configuration
+```
+
+## .gitignore
+
+The following files/directories are excluded from version control:
+- node_modules/       # Node.js dependencies
+- .phpunit.cache/     # PHPUnit cache
+- playwright-report/  # Playwright test reports
+- test-results/       # Playwright failure artifacts
+- playwright-cache/   # Playwright browser cache
 ```
 
 ## API Endpoints
@@ -214,7 +248,7 @@ For testing, PHPUnit uses a separate database configured in `phpunit.xml`:
 
 ```xml
 <env name="DB_HOST" value="127.0.0.1"/>
-<env name="DB_PORT" value="3308"/>
+<env name="DB_PORT" value="3309"/>
 <env name="DB_NAME" value="olmos_talent_test"/>
 <env name="DB_USERNAME" value="root"/>
 <env name="DB_PASSWORD" value="root_password"/>
@@ -226,6 +260,7 @@ The project uses GitHub Actions for automated testing on push and pull requests:
 
 - **test-php**: Runs PHPUnit tests with MySQL service
 - **test-js**: Runs Jest tests with Node.js
+- **test-e2e**: Runs Playwright E2E tests with PHP, MySQL, and browser automation
 
 ## Contributing
 

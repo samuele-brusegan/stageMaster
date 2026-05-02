@@ -15,12 +15,17 @@ abstract class TestCase extends BaseTestCase
         
         // Setup test database connection
         $host = $_ENV['DB_HOST'] ?? '127.0.0.1';
-        $port = $_ENV['DB_PORT'] ?? '3308';
+        $port = $_ENV['DB_PORT'] ?? '3309';
         $db   = $_ENV['DB_NAME'] ?? 'olmos_talent_test';
         $user = $_ENV['DB_USERNAME'] ?? 'root';
         $pass = $_ENV['DB_PASSWORD'] ?? '';
         $charset = 'utf8mb4';
 
+        if (!preg_match('/^[A-Za-z0-9_]+$/', $db)) {
+            throw new \InvalidArgumentException('Invalid test database name.');
+        }
+
+        $serverDsn = "mysql:host=$host;port=$port;charset=$charset";
         $dsn = "mysql:host=$host;port=$port;dbname=$db;charset=$charset";
         $options = [
             PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
@@ -28,6 +33,8 @@ abstract class TestCase extends BaseTestCase
             PDO::ATTR_EMULATE_PREPARES   => false,
         ];
 
+        $server = new PDO($serverDsn, $user, $pass, $options);
+        $server->exec("CREATE DATABASE IF NOT EXISTS `$db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
         $this->db = new PDO($dsn, $user, $pass, $options);
         
         // Clean up database before each test

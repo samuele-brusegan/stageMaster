@@ -29,8 +29,18 @@ class MediaLibraryController extends ApiController {
      */
     public function upload() {
         try {
+            $maxUploadBytes = 200 * 1024 * 1024;
+            $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
+            if ($contentLength > $maxUploadBytes) {
+                $this->json([
+                    'status' => 'error',
+                    'message' => 'File troppo grande. Limite massimo: 200 MB'
+                ], 413);
+            }
+
             if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-                $this->json(['status' => 'error', 'message' => 'No file uploaded or upload error'], 400);
+                $message = $this->uploadErrorMessage($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE);
+                $this->json(['status' => 'error', 'message' => $message], 400);
             }
 
             $file = $_FILES['file'];
@@ -38,6 +48,13 @@ class MediaLibraryController extends ApiController {
             $fileTmp = $file['tmp_name'];
             $fileSize = $file['size'];
             $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+            if ($fileSize > $maxUploadBytes) {
+                $this->json([
+                    'status' => 'error',
+                    'message' => 'File troppo grande. Limite massimo: 200 MB'
+                ], 413);
+            }
 
             // Determine file type
             $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
@@ -94,6 +111,19 @@ class MediaLibraryController extends ApiController {
         } catch (\Exception $e) {
             $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    private function uploadErrorMessage($errorCode) {
+        return match ($errorCode) {
+            UPLOAD_ERR_INI_SIZE,
+            UPLOAD_ERR_FORM_SIZE => 'File troppo grande per la configurazione del server',
+            UPLOAD_ERR_PARTIAL => 'Upload incompleto, riprova',
+            UPLOAD_ERR_NO_FILE => 'Nessun file selezionato',
+            UPLOAD_ERR_NO_TMP_DIR => 'Cartella temporanea upload mancante',
+            UPLOAD_ERR_CANT_WRITE => 'Impossibile scrivere il file caricato',
+            UPLOAD_ERR_EXTENSION => 'Upload bloccato da una estensione PHP',
+            default => 'Errore upload sconosciuto'
+        };
     }
 
     /**

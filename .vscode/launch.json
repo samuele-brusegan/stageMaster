@@ -27,7 +27,7 @@
             "port": 9003,
             "env": {
                 "DB_HOST": "127.0.0.1",
-                "DB_PORT": "3308",
+                "DB_PORT": "3309",
                 "DB_NAME": "olmos_talent_test",
                 "DB_USERNAME": "root",
                 "DB_PASSWORD": "root_password"
@@ -50,7 +50,7 @@
             "port": 9003,
             "env": {
                 "DB_HOST": "127.0.0.1",
-                "DB_PORT": "3308",
+                "DB_PORT": "3309",
                 "DB_NAME": "olmos_talent_test",
                 "DB_USERNAME": "root",
                 "DB_PASSWORD": "root_password"
@@ -63,6 +63,7 @@
             "program": "${workspaceRoot}/vendor/bin/phpunit",
             "args": [
                 "--coverage-text",
+                "--coverage-filter=app",
                 "--coverage-html=coverage"
             ],
             "cwd": "${workspaceRoot}",
@@ -71,7 +72,7 @@
             ],
             "env": {
                 "DB_HOST": "127.0.0.1",
-                "DB_PORT": "3308",
+                "DB_PORT": "3309",
                 "DB_NAME": "olmos_talent_test",
                 "DB_USERNAME": "root",
                 "DB_PASSWORD": "root_password"

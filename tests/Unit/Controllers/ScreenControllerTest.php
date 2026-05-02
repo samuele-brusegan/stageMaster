@@ -35,7 +35,14 @@ class ScreenControllerTest extends TestCase
                 talento_id INT,
                 tipo_output ENUM('proiettore', 'gobbo') NOT NULL,
                 file_path VARCHAR(255) NOT NULL,
+                friendly_name VARCHAR(100) NULL,
                 screen_id INT,
+                tipo_media ENUM('VIDEO', 'AUDIO', 'FOTO') DEFAULT 'VIDEO',
+                timestamp_inizio TIME DEFAULT '00:00:00',
+                timestamp_fine TIME NULL,
+                durata_totale_sec INT NULL,
+                fade_in_sec INT DEFAULT 0,
+                fade_out_sec INT DEFAULT 0,
                 ordine_esecuzione INT
             )
         ");

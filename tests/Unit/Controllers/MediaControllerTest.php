@@ -26,12 +26,25 @@ class MediaControllerTest extends TestCase
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 talento_id INT,
                 tipo_output ENUM('proiettore', 'gobbo') NOT NULL,
+                screen_id INT NULL,
                 file_path VARCHAR(255) NOT NULL,
+                friendly_name VARCHAR(100) NULL,
+                tipo_media ENUM('VIDEO', 'AUDIO', 'FOTO') DEFAULT 'VIDEO',
                 timestamp_inizio TIME DEFAULT '00:00:00',
                 timestamp_fine TIME,
+                durata_totale_sec INT NULL,
                 fade_in_sec INT DEFAULT 0,
                 fade_out_sec INT DEFAULT 0,
                 ordine_esecuzione INT
+            )
+        ");
+
+        $this->executeSql("
+            CREATE TABLE IF NOT EXISTS screens (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                nome VARCHAR(50) NOT NULL,
+                tipo ENUM('indipendente', 'mirror') DEFAULT 'indipendente',
+                screen_riferimento_id INT NULL
             )
         ");
         

@@ -55,6 +55,42 @@ class ScreenTest extends TestCase
         $this->assertNull($screen['screen_riferimento_id']);
     }
 
+    public function testCreateScreenTrimsName(): void
+    {
+        $id = $this->screenModel->create([
+            'nome' => '  Trimmed Screen  ',
+            'tipo' => 'indipendente'
+        ]);
+
+        $screen = $this->screenModel->find($id);
+        $this->assertEquals('Trimmed Screen', $screen['nome']);
+    }
+
+    public function testCreateScreenRequiresName(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->screenModel->create(['nome' => '   ']);
+    }
+
+    public function testCreateScreenRejectsInvalidType(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->screenModel->create([
+            'nome' => 'Invalid Type',
+            'tipo' => 'external'
+        ]);
+    }
+
+    public function testCreateMirrorScreenRejectsInvalidReference(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->screenModel->create([
+            'nome' => 'Broken Mirror',
+            'tipo' => 'mirror',
+            'screen_riferimento_id' => 99999
+        ]);
+    }
+
     public function testCreateMirrorScreen(): void
     {
         $refId = $this->insertTestData('screens', [
@@ -162,7 +198,14 @@ class ScreenTest extends TestCase
                 talento_id INT,
                 tipo_output ENUM('proiettore', 'gobbo') NOT NULL,
                 file_path VARCHAR(255) NOT NULL,
+                friendly_name VARCHAR(100) NULL,
                 screen_id INT,
+                tipo_media ENUM('VIDEO', 'AUDIO', 'FOTO') DEFAULT 'VIDEO',
+                timestamp_inizio TIME DEFAULT '00:00:00',
+                timestamp_fine TIME NULL,
+                durata_totale_sec INT NULL,
+                fade_in_sec INT DEFAULT 0,
+                fade_out_sec INT DEFAULT 0,
                 ordine_esecuzione INT
             )
         ");
@@ -211,7 +254,14 @@ class ScreenTest extends TestCase
                 talento_id INT,
                 tipo_output ENUM('proiettore', 'gobbo') NOT NULL,
                 file_path VARCHAR(255) NOT NULL,
+                friendly_name VARCHAR(100) NULL,
                 screen_id INT,
+                tipo_media ENUM('VIDEO', 'AUDIO', 'FOTO') DEFAULT 'VIDEO',
+                timestamp_inizio TIME DEFAULT '00:00:00',
+                timestamp_fine TIME NULL,
+                durata_totale_sec INT NULL,
+                fade_in_sec INT DEFAULT 0,
+                fade_out_sec INT DEFAULT 0,
                 ordine_esecuzione INT
             )
         ");

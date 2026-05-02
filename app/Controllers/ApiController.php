@@ -27,7 +27,12 @@ class ApiController extends Controller {
     public function addTalento() {
         header('Content-Type: application/json');
         try {
-            $data = json_decode(file_get_contents('php://input'), true);
+            $data = $this->getJsonInput() ?? [];
+            if (empty(trim($data['nome'] ?? ''))) {
+                http_response_code(400);
+                echo json_encode(['status' => 'error', 'message' => 'Nome talento obbligatorio']);
+                return;
+            }
             $db = (new DatabaseConnector())->getConnection();
             $talentoModel = new \App\Models\Talento($db);
             
@@ -80,7 +85,13 @@ class ApiController extends Controller {
     }
 
     protected function getJsonInput() {
-        return json_decode(file_get_contents('php://input'), true);
+        $raw = file_get_contents('php://input');
+        if ($raw === false || trim($raw) === '') {
+            return [];
+        }
+
+        $data = json_decode($raw, true);
+        return is_array($data) ? $data : [];
     }
 
     protected function validate($data, $rules) {

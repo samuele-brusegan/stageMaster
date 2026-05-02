@@ -19,9 +19,6 @@ class Controller {
     function projector() {
         $this->render('projector');
     }
-    function gobbo() {
-        $this->render('gobbo');
-    }
     function admin() {
         $this->render('admin');
     }

@@ -15,7 +15,7 @@
     <php>
         <env name="APP_ENV" value="testing"/>
         <env name="DB_HOST" value="127.0.0.1"/>
-        <env name="DB_PORT" value="3308"/>
+        <env name="DB_PORT" value="3309"/>
         <env name="DB_NAME" value="olmos_talent_test"/>
         <env name="DB_USERNAME" value="root"/>
         <env name="DB_PASSWORD" value="root_password"/>

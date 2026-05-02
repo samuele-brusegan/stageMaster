@@ -18,12 +18,14 @@ function getDatabaseConnection() {
     }
 
     $host = $_ENV['DB_HOST'] ?? 'db';
+    $port = $_ENV['DB_PORT'] ?? null;
     $db   = $_ENV['DB_NAME'] ?? 'olmos_talent';
     $user = $_ENV['DB_USERNAME'] ?? 'olmos_user';
     $pass = $_ENV['DB_PASSWORD'] ?? 'user_password';
     $charset = 'utf8mb4';
 
-    $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
+    $portPart = $port ? ";port=$port" : '';
+    $dsn = "mysql:host=$host{$portPart};dbname=$db;charset=$charset";
     $options = [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,

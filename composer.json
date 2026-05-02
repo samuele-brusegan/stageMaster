@@ -28,7 +28,7 @@
     },
     "scripts": {
         "test": "phpunit",
-        "test-coverage": "phpunit --coverage-html coverage --coverage-text",
+        "test-coverage": "phpunit --coverage-filter app --coverage-html coverage --coverage-text",
         "test-js": "jest",
         "test-js-coverage": "jest --coverage"
     }

@@ -16,6 +16,14 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
 
+# Configure upload limits for media files
+RUN { \
+    echo "upload_max_filesize=256M"; \
+    echo "post_max_size=256M"; \
+    echo "memory_limit=512M"; \
+    echo "max_file_uploads=20"; \
+} > /usr/local/etc/php/conf.d/stagemaster-uploads.ini
+
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 

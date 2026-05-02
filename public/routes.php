@@ -19,7 +19,10 @@ $router->add('/api/talenti/riordina'    , 'ApiController', 'reorderTalento');
 
 // === API Media ===
 $router->add('/api/media/talento'       , 'MediaController', 'getByTalento');
-$router->add('/api/media'               , 'MediaController', 'show');
+$router->add('/api/media'               , 'MediaController', $_SERVER['REQUEST_METHOD'] === 'POST' ? 'create' : ($_SERVER['REQUEST_METHOD'] === 'DELETE' ? 'delete' : 'index'));
+$router->add('/api/media/timeline/update', 'MediaController', 'updateTimeline');
+$router->add('/api/media/timeline/reorder', 'MediaController', 'reorderTimeline');
+$router->add('/api/slot-media/add'      , 'MediaController', 'addToSlot');
 
 // === API Player State ===
 $router->add('/api/state'               , 'PlayerStateController', 'index');
@@ -27,7 +30,6 @@ $router->add('/api/state/show'          , 'PlayerStateController', 'show');
 $router->add('/api/state/update'        , 'PlayerStateController', 'update');
 $router->add('/dashboard'               , 'Controller', 'dashboard');
 $router->add('/projector'               , 'Controller', 'projector');
-$router->add('/gobbo'                   , 'Controller', 'gobbo');
 $router->add('/admin'                   , 'Controller', 'admin');
 $router->add('/timeline'                , 'Controller', 'timeline');
 
@@ -69,4 +71,3 @@ $router->add('/api/media-library/upload' , 'MediaLibraryController', 'upload');
 $router->add('/api/media-library/delete' , 'MediaLibraryController', 'delete');
 $router->add('/api/media-library/scan'   , 'MediaLibraryController', 'scan');
 $router->add('/api/media-library/register', 'MediaLibraryController', 'register');
-
