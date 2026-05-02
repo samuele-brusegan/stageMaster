@@ -15,7 +15,78 @@
         .media-slot { transition: all 0.2s ease; }
         .media-slot:hover { transform: scale(1.02); }
         .screen-active { border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
-        #screens-grid { min-height: 400px; }
+        #screens-grid {
+            min-height: 400px;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            grid-auto-rows: max-content;
+        }
+        @media (min-width: 900px) {
+            #screens-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (min-width: 1500px) {
+            #screens-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        }
+        .screen-card { aspect-ratio: 16 / 9; min-height: 0; }
+        .screen-preview-stage {
+            cursor: none;
+        }
+        .screen-cursor-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.45);
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.18s ease;
+        }
+        .slot-card { position: relative; padding-top: 2.2rem; }
+        .slot-actions {
+            position: absolute;
+            top: 0;
+            right: 0;
+            height: 1.9rem;
+            padding: 0 0.35rem 0 0.55rem;
+            display: flex;
+            align-items: center;
+            gap: 0.2rem;
+            background: rgba(15, 23, 42, 0.92);
+            border: 1px solid rgba(51, 65, 85, 0.95);
+            border-right: 0;
+            clip-path: polygon(12px 0, 100% 0, 100% 100%, 0 100%);
+        }
+        .slot-action {
+            width: 1.35rem;
+            height: 1.35rem;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            color: rgb(148, 163, 184);
+            border-radius: 0.25rem;
+        }
+        .slot-action:hover { color: white; background: rgba(51, 65, 85, 0.9); }
+        .dashboard-timeline-row {
+            position: relative;
+            min-width: var(--timeline-width, 720px);
+            height: 2.75rem;
+            background-image: repeating-linear-gradient(to right, rgba(148, 163, 184, 0.16) 0, rgba(148, 163, 184, 0.16) 1px, transparent 1px, transparent 40px);
+        }
+        .dashboard-timeline-axis {
+            min-width: var(--timeline-width, 720px);
+            height: 1.35rem;
+            background-image: repeating-linear-gradient(to right, rgba(148, 163, 184, 0.16) 0, rgba(148, 163, 184, 0.16) 1px, transparent 1px, transparent 40px);
+        }
+        .dashboard-playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: rgba(248, 113, 113, 0.95);
+            box-shadow: 0 0 12px rgba(248, 113, 113, 0.55);
+            pointer-events: none;
+        }
 
         /* Responsive sidebar toggle */
         @media (max-width: 1280px) {
@@ -34,7 +105,7 @@
 <body class="h-full text-slate-200 overflow-hidden">
     <div class="flex h-full">
         <!-- Left Column - Slot & Coda (250px) -->
-        <aside id="sidebar-left" class="sidebar-left w-[280px] glass border-r border-slate-700/50 flex flex-col h-full">
+        <aside id="sidebar-left" class="sidebar-left w-[280px] glass glass-blue border-r border-slate-700/50 flex flex-col h-full">
             <div class="p-4 border-b border-slate-700/50">
                 <h2 class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">Slot</h2>
             </div>
@@ -61,12 +132,12 @@
             <div class="absolute inset-0 gradient-bg opacity-10 pointer-events-none"></div>
             
             <!-- Header -->
-            <div class="relative z-10 p-4 border-b border-slate-700/50 glass">
+            <div class="relative z-10 p-4 border-b border-slate-700/50 glass glass-blue">
                 <div class="flex justify-between items-center">
                     <div class="flex items-center gap-3">
                         <button onclick="toggleSidebar('left')" class="lg:hidden p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors" title="Menu Slot">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"></path>
                             </svg>
                         </button>
                         <div>
@@ -76,13 +147,14 @@
                     </div>
                     <div class="flex gap-3">
                         <a href="/admin" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 rounded-lg font-semibold transition-all border border-slate-700 flex items-center gap-2 text-sm">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
                             <span>Admin</span>
                         </a>
                         <button onclick="createScreen('projector')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg font-semibold transition-all text-sm">Crea Schermo</button>
                         <button onclick="toggleSidebar('right')" class="lg:hidden p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors" title="Controlli">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
                         </button>
                     </div>
@@ -91,7 +163,7 @@
 
             <!-- Timeline Section -->
             <div class="p-4 h-48 shrink-0">
-                <div class="glass rounded-xl p-4 h-full flex flex-col">
+                <div class="glass glass-blue rounded-xl p-4 h-full flex flex-col">
                     <div class="flex justify-between items-center mb-3 shrink-0">
                         <h3 class="text-sm font-bold text-blue-400">Timeline <span id="current-slot-name" class="text-slate-500 font-normal ml-2"></span></h3>
                         <div class="flex gap-2">
@@ -99,7 +171,7 @@
                             <button class="text-xs bg-slate-700 hover:bg-slate-600 px-2 py-1 rounded">Zoom Out</button>
                         </div>
                     </div>
-                    <div id="timeline" class="timeline-track flex-1 rounded-lg overflow-x-auto flex items-center px-2 gap-1 min-h-0">
+                    <div id="timeline" class="timeline-track flex-1 rounded-lg overflow-auto px-2 py-2 min-h-0">
                         <div id="no-slot-message" class="w-full text-center text-slate-500 text-sm">Non è stato selezionato nessuno slot</div>
                         <!-- Timeline media slots loaded via JS -->
                     </div>
@@ -108,7 +180,7 @@
 
             <!-- Screens Grid -->
             <div class="flex-1 p-4 overflow-hidden min-h-0">
-                <div id="screens-grid" class="grid grid-cols-2 gap-4 h-full min-h-0">
+                <div id="screens-grid" class="grid gap-4 h-full min-h-0 overflow-y-auto pr-1">
                     <!-- Screens will be rendered dynamically via JavaScript -->
                     <div class="text-slate-500 text-sm text-center col-span-2">Caricamento schermi...</div>
                 </div>
@@ -116,7 +188,7 @@
         </main>
 
         <!-- Right Column - Proprietà & Note (320px) -->
-        <aside id="sidebar-right" class="sidebar-right w-[320px] glass border-l border-slate-700/50 flex flex-col overflow-hidden h-full">
+        <aside id="sidebar-right" class="sidebar-right w-[320px] glass glass-purple border-l border-slate-700/50 flex flex-col overflow-hidden h-full">
             <!-- Playback Controls -->
             <div class="p-3 border-b border-slate-700/50 shrink-0">
                 <h3 class="text-xs font-bold mb-2 text-blue-400">Controlli Riproduzione</h3>
@@ -135,7 +207,7 @@
 
             <!-- Gestore Audio/Video -->
             <div class="flex-1 overflow-y-auto p-3 space-y-3">
-                <div class="glass rounded-lg p-3">
+                <div class="glass glass-purple rounded-lg p-3">
                     <h3 class="text-xs font-bold mb-2 text-purple-400">Gestore Audio/Video</h3>
 
                     <!-- VIDEO Section -->
@@ -226,8 +298,8 @@
                 </div>
 
                 <!-- Note Tecniche -->
-                <div class="glass rounded-lg p-3">
-                    <h3 class="text-xs font-bold mb-2 text-purple-400">Note Tecniche</h3>
+                <div class="glass glass-red rounded-lg p-3">
+                    <h3 class="text-xs font-bold mb-2 text-red-400">Note Tecniche</h3>
 
                     <div class="space-y-2 text-[10px]">
                         <div>
@@ -258,9 +330,19 @@
 
             <!-- Status Console -->
             <div class="p-3 border-t border-slate-700/50 shrink-0">
-                <h3 class="text-[10px] font-bold uppercase text-slate-500 mb-1">Logs</h3>
-                <div id="logs" class="h-20 font-mono text-[9px] text-slate-400 bg-black/30 p-1.5 rounded-lg overflow-y-auto space-y-0.5">
-                    <div>[System] Dashboard inizializzata</div>
+                <div class="glass glass-green rounded-lg p-2 mb-2">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-[10px] font-bold uppercase text-green-400">Tempo slot</h3>
+                        <span id="slot-clock-state" class="text-[9px] uppercase text-slate-500">fermo</span>
+                    </div>
+                    <div id="slot-clock" class="mt-1 font-mono text-2xl leading-none text-white tabular-nums">00:00.0</div>
+                    <div id="slot-clock-name" class="mt-1 text-[9px] text-slate-500 truncate">Nessuno slot avviato</div>
+                </div>
+                <div class="glass glass-green rounded-lg p-2">
+                    <h3 class="text-[10px] font-bold uppercase text-green-400 mb-1">Logs</h3>
+                    <div id="logs" class="h-20 font-mono text-[9px] text-slate-400 bg-black/30 p-1.5 rounded-lg overflow-y-auto space-y-0.5">
+                        <div>[System] Dashboard inizializzata</div>
+                    </div>
                 </div>
             </div>
         </aside>
@@ -268,12 +350,25 @@
 
     <script>
         // Sincronizzazione Finestre (localStorage)
+        const slotClock = {
+            slotId: null,
+            slotName: null,
+            startedAt: null,
+            accumulatedMs: 0,
+            running: false
+        };
+
         async function fetchSetlist() {
             try {
                 const response = await fetch('/api/talenti');
                 const result = await response.json();
                 if (result.status === 'ok') {
+                    window.currentTalenti = result.data || [];
                     renderSetlist(result.data);
+                    if (!currentSlotId && window.currentTalenti.length > 0) {
+                        currentSlotId = window.currentTalenti[0].id;
+                        loadTimeline(currentSlotId);
+                    }
                 }
             } catch (error) {
                 console.error("Dashboard: Errore nel recupero scaletta:", error);
@@ -309,39 +404,63 @@
             container.innerHTML = '';
             talenti.forEach((talent, index) => {
                 const item = document.createElement('div');
-                item.className = 'p-3 rounded-lg bg-slate-800/50 border border-slate-700 hover:border-blue-400 transition-all group';
+                item.className = 'slot-card rounded-lg glass glass-blue hover:border-blue-400 transition-all group';
                 item.innerHTML = `
+                    <div class="slot-actions" aria-label="Azioni slot">
+                        <button class="slot-action" onclick="startSlot(${talent.id})" title="Start" aria-label="Start">${iconPlay()}</button>
+                        <button class="slot-action" onclick="pauseSlot(${talent.id})" title="Pause" aria-label="Pause">${iconPause()}</button>
+                        <button class="slot-action" onclick="stopSlot(${talent.id})" title="Stop" aria-label="Stop">${iconStop()}</button>
+                        <button class="slot-action" onclick="openTimeline(${talent.id})" title="Timeline" aria-label="Timeline">${iconTimeline()}</button>
+                    </div>
+                    <div class="px-3 pb-3">
                     <div class="flex justify-between items-center">
                         <span class="text-xs font-mono text-slate-400">#${index + 1}</span>
                         <div class="relative">
                             <button onclick="toggleSlotMenu(${talent.id})" class="p-1 hover:bg-slate-700 rounded">
-                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
+                                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path></svg>
                             </button>
                             <div id="slot-menu-${talent.id}" class="hidden absolute right-0 top-8 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10 min-w-[120px]">
-                                <button onclick="sendCommand('play', {slot_id: ${talent.id}})" class="w-full px-3 py-2 text-left text-sm hover:bg-slate-700 flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-green-400" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                                <button onclick="startSlot(${talent.id})" class="w-full px-3 py-2 text-left text-sm hover:bg-slate-700 flex items-center gap-2">
+                                    <svg class="w-3 h-3 text-green-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     Play
                                 </button>
-                                <button onclick="sendCommand('pause', {slot_id: ${talent.id}})" class="w-full px-3 py-2 text-left text-sm hover:bg-slate-700 flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                                <button onclick="pauseSlot(${talent.id})" class="w-full px-3 py-2 text-left text-sm hover:bg-slate-700 flex items-center gap-2">
+                                    <svg class="w-3 h-3 text-yellow-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     Pause
                                 </button>
-                                <button onclick="sendCommand('stop', {slot_id: ${talent.id}})" class="w-full px-3 py-2 text-left text-sm hover:bg-slate-700 flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-red-400" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"></path></svg>
+                                <button onclick="stopSlot(${talent.id})" class="w-full px-3 py-2 text-left text-sm hover:bg-slate-700 flex items-center gap-2">
+                                    <svg class="w-3 h-3 text-red-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z"></path></svg>
                                     Stop
                                 </button>
                                 <div class="border-t border-slate-700"></div>
                                 <button onclick="openTimeline(${talent.id})" class="w-full px-3 py-2 text-left text-sm hover:bg-slate-700 flex items-center gap-2">
-                                    <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                                    <svg class="w-3 h-3 text-blue-400" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                                     Timeline
                                 </button>
                             </div>
                         </div>
                     </div>
                     <h3 class="font-bold text-sm cursor-pointer hover:text-blue-400 transition-colors" onclick="selectSlot(${talent.id})">${talent.nome}</h3>
+                    </div>
                 `;
                 container.appendChild(item);
             });
+        }
+
+        function iconPlay() {
+            return '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 5v14l11-7z"></path></svg>';
+        }
+
+        function iconPause() {
+            return '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5v14M15 5v14"></path></svg>';
+        }
+
+        function iconStop() {
+            return '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h10v10H7z"></path></svg>';
+        }
+
+        function iconTimeline() {
+            return '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16M8 4v16M16 4v16"></path></svg>';
         }
 
         function toggleSlotMenu(slotId) {
@@ -361,35 +480,148 @@
             loadTimeline(slotId);
         }
 
+        async function startSlot(slotId) {
+            selectSlot(slotId);
+            startSlotClock(slotId);
+            sendCommand('play', { slot_id: slotId });
+            log(`Slot avviato: ${slotId}`);
+        }
+
+        function pauseSlot(slotId) {
+            if (slotId) currentSlotId = slotId;
+            pauseSlotClock();
+            sendCommand('pause', { slot_id: slotId || currentSlotId });
+            log(`Slot in pausa: ${slotId || currentSlotId || 'corrente'}`);
+        }
+
+        function stopSlot(slotId) {
+            if (slotId) currentSlotId = slotId;
+            resetSlotClock();
+            sendCommand('stop', { slot_id: slotId || currentSlotId });
+            log(`Slot fermato: ${slotId || currentSlotId || 'corrente'}`);
+        }
+
+        function startSlotClock(slotId) {
+            const slot = window.currentTalenti?.find(t => String(t.id) === String(slotId));
+            slotClock.slotId = slotId;
+            slotClock.slotName = slot ? slot.nome : `Slot ${slotId}`;
+            slotClock.startedAt = Date.now();
+            slotClock.accumulatedMs = 0;
+            slotClock.running = true;
+            updateSlotClock();
+        }
+
+        function pauseSlotClock() {
+            if (!slotClock.running || !slotClock.startedAt) return;
+            slotClock.accumulatedMs += Date.now() - slotClock.startedAt;
+            slotClock.startedAt = null;
+            slotClock.running = false;
+            updateSlotClock();
+        }
+
+        function resumeSlotClock() {
+            if (!slotClock.slotId || slotClock.running) return;
+            slotClock.startedAt = Date.now();
+            slotClock.running = true;
+            updateSlotClock();
+        }
+
+        function resetSlotClock() {
+            slotClock.slotId = null;
+            slotClock.slotName = null;
+            slotClock.startedAt = null;
+            slotClock.accumulatedMs = 0;
+            slotClock.running = false;
+            updateSlotClock();
+        }
+
+        function elapsedSlotMs() {
+            return slotClock.accumulatedMs + (slotClock.running && slotClock.startedAt ? Date.now() - slotClock.startedAt : 0);
+        }
+
+        function formatSlotClock(ms) {
+            const totalTenths = Math.floor(ms / 100);
+            const tenths = totalTenths % 10;
+            const totalSeconds = Math.floor(totalTenths / 10);
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${tenths}`;
+        }
+
+        function updateSlotClock() {
+            const clock = document.getElementById('slot-clock');
+            const state = document.getElementById('slot-clock-state');
+            const name = document.getElementById('slot-clock-name');
+            if (!clock || !state || !name) return;
+            clock.textContent = formatSlotClock(elapsedSlotMs());
+            state.textContent = slotClock.running ? 'running' : slotClock.slotId ? 'pausa' : 'fermo';
+            name.textContent = slotClock.slotName || 'Nessuno slot avviato';
+            updateDashboardPlayhead();
+        }
+
         async function loadTimeline(slotId) {
             const slot = window.currentTalenti?.find(t => t.id == slotId);
             if (slot) {
                 document.getElementById('current-slot-name').textContent = `- ${slot.nome}`;
                 document.getElementById('no-slot-message').classList.add('hidden');
-                
-                // Mock timeline data
                 const timeline = document.getElementById('timeline');
-                const mockSlots = [
-                    { id: 'm1', label: 'm1', type: 'blue' },
-                    { id: 'm2', label: 'm2', type: 'blue' },
-                    { id: 'm3', label: 'm3', type: 'blue' },
-                    { id: 'm4', label: 'm4', type: 'blue' },
-                    { id: 'mB', label: 'mB', type: 'purple' }
-                ];
-                
-                timeline.innerHTML = '';
-                mockSlots.forEach(slot => {
-                    const slotEl = document.createElement('div');
-                    slotEl.className = `media-slot min-w-[80px] h-16 bg-${slot.type}-500/20 border border-${slot.type}-500/30 rounded flex items-center justify-center text-xs cursor-pointer`;
-                    slotEl.textContent = slot.label;
-                    timeline.appendChild(slotEl);
-                });
+                timeline.innerHTML = '<div class="text-slate-500 text-sm">Caricamento timeline...</div>';
+                try {
+                    const response = await fetch(`/api/media/talento?talento_id=${slotId}`);
+                    const media = await response.json();
+                    renderDashboardTimeline(Array.isArray(media) ? media : []);
+                } catch (error) {
+                    console.error("Dashboard: Errore timeline:", error);
+                    timeline.innerHTML = '<div class="text-red-400 text-sm">Errore caricamento timeline</div>';
+                }
             }
+        }
+
+        function timelineSeconds(value) {
+            if (!value) return 0;
+            const parts = String(value).split(':').map(Number);
+            if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+            if (parts.length === 2) return parts[0] * 60 + parts[1];
+            return Number(value) || 0;
+        }
+
+        function renderDashboardTimeline(media) {
+            const timeline = document.getElementById('timeline');
+            timeline.innerHTML = '';
+            if (media.length === 0) {
+                timeline.innerHTML = '<div class="w-full text-center text-slate-500 text-sm">Nessun media nello slot</div>';
+                return;
+            }
+            const byScreen = {};
+            media.forEach(item => {
+                const key = item.screen_id || 'none';
+                if (!byScreen[key]) byScreen[key] = [];
+                byScreen[key].push(item);
+            });
+            Object.entries(byScreen).forEach(([screenId, items]) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-start gap-2 mb-2';
+                const label = items[0].screen_nome || (screenId === 'none' ? 'No screen' : `Screen ${screenId}`);
+                const blocks = items.map(item => {
+                    const color = item.tipo_media === 'FOTO' ? 'yellow' : item.tipo_media === 'AUDIO' ? 'green' : 'blue';
+                    return `<div class="media-slot inline-flex items-center max-w-full rounded-md bg-${color}-500/12 border border-${color}-500/25 px-3 py-2 text-[11px]">
+                        <span class="font-semibold truncate">${item.friendly_name || item.file_path.split('/').pop()}</span>
+                    </div>`;
+                }).join('');
+                row.innerHTML = `<div class="w-20 shrink-0 text-[10px] text-yellow-400 text-right pt-2">${label}</div><div class="flex flex-wrap gap-2 rounded border border-slate-800 px-2 py-2 bg-slate-950/40">${blocks}</div>`;
+                timeline.appendChild(row);
+            });
+        }
+
+        function updateDashboardPlayhead() {
+            return;
         }
 
         async function createScreen(type) {
             const name = prompt('Inserisci il nome dello schermo:');
             if (!name) return;
+
+            const screenWindow = window.open('about:blank', '_blank');
             
             try {
                 const response = await fetch('/api/screens/create', {
@@ -401,11 +633,19 @@
                 if (result.status === 'ok') {
                     log(`Schermo "${name}" creato con successo`);
                     fetchScreens();
-                    // Open the screen in a new window
-                    window.open(`/${type}?screen_id=${result.id}`, '_blank');
+                    if (screenWindow) {
+                        screenWindow.location.href = `/${type}?screen_id=${result.id}`;
+                    } else {
+                        log(`Popup bloccato. Apri manualmente: /${type}?screen_id=${result.id}`);
+                    }
+                } else {
+                    if (screenWindow) screenWindow.close();
+                    log(`Errore creazione schermo: ${result.message || 'risposta non valida'}`);
                 }
             } catch (error) {
+                if (screenWindow) screenWindow.close();
                 console.error("Dashboard: Errore nella creazione schermo:", error);
+                log('Errore nella creazione schermo');
             }
         }
 
@@ -457,7 +697,7 @@
 
             screens.forEach(screen => {
                 const screenDiv = document.createElement('div');
-                screenDiv.className = 'glass rounded-xl overflow-hidden flex flex-col';
+                screenDiv.className = 'screen-card glass glass-yellow rounded-xl overflow-hidden flex flex-col';
                 screenDiv.id = `screen-${screen.id}`;
 
                 // Generate mirror options based on other screens
@@ -476,23 +716,31 @@
                                 ${mirrorOptions}
                             </select>
                             <button onclick="openScreenWindow(${screen.id}, '${screen.nome}')" class="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-blue-400 transition-colors" title="Apri schermo in nuova finestra">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
                                 </svg>
                             </button>
                         </div>
                     </div>
-                    <div class="flex-1 bg-black flex items-center justify-center relative min-h-0">
+                    <div class="screen-preview-stage flex-1 bg-black flex items-center justify-center relative min-h-0" data-screen-id="${screen.id}">
                         <img id="screen-${screen.id}-image" class="w-full h-full object-contain pointer-events-none opacity-50 hidden" alt="">
                         <video id="screen-${screen.id}-video" class="w-full h-full object-contain pointer-events-none opacity-50 hidden" muted></video>
                         <div id="screen-${screen.id}-placeholder" class="w-full h-full flex items-center justify-center bg-slate-800 hidden">
-                            <svg class="w-12 h-12 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                            <svg class="w-12 h-12 text-slate-600" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
                         </div>
                         <span id="screen-${screen.id}-label" class="text-slate-600 font-mono text-xs absolute">${screen.nome}</span>
+                        <div id="screen-${screen.id}-cursor" class="screen-cursor-dot"></div>
                     </div>
                 `;
+
+                const stage = screenDiv.querySelector('.screen-preview-stage');
+                if (stage) {
+                    stage.addEventListener('mousemove', event => showScreenCursor(screen.id, event));
+                    stage.addEventListener('mouseenter', event => showScreenCursor(screen.id, event));
+                    stage.addEventListener('mouseleave', () => hideScreenCursor(screen.id));
+                }
 
                 container.appendChild(screenDiv);
             });
@@ -584,11 +832,19 @@
                         if (placeholder) placeholder.classList.remove('hidden');
                         if (label) label.style.display = 'none';
                     }
+                    applyScreenPreview(screenId, {
+                        active: true,
+                        src: normalizedPath,
+                        tipo_media: media.tipo_media || inferPreviewType(normalizedPath, media.file_name),
+                        mediaName: media.file_name,
+                        currentTime: 0
+                    });
                 } else {
                     // No media, show placeholder
                     console.log(`No media for screen ${screenId}`);
                     if (placeholder) placeholder.classList.remove('hidden');
                     if (label) label.style.display = 'none';
+                    applyScreenPreview(screenId, { active: false });
                 }
             } catch (error) {
                 console.error(`Dashboard: Errore caricamento anteprima schermo ${screenId}:`, error);
@@ -597,6 +853,7 @@
                 const label = document.getElementById(`screen-${screenId}-label`);
                 if (placeholder) placeholder.classList.remove('hidden');
                 if (label) label.style.display = 'none';
+                applyScreenPreview(screenId, { active: false });
             }
         }
 
@@ -670,6 +927,79 @@
             }).catch(err => console.error('Errore aggiornamento tipo schermo:', err));
         }
 
+        function inferPreviewType(path, mediaName = '') {
+            const target = String(path || mediaName || '').toLowerCase();
+            if (/\.(jpg|jpeg|png|gif|webp)$/.test(target)) return 'FOTO';
+            if (/\.(mp3|wav|ogg|flac)$/.test(target)) return 'AUDIO';
+            return 'VIDEO';
+        }
+
+        function applyScreenPreview(screenId, status) {
+            const video = document.getElementById(`screen-${screenId}-video`);
+            const image = document.getElementById(`screen-${screenId}-image`);
+            const placeholder = document.getElementById(`screen-${screenId}-placeholder`);
+            const label = document.getElementById(`screen-${screenId}-label`);
+            const cursor = document.getElementById(`screen-${screenId}-cursor`);
+            const stage = document.querySelector(`.screen-preview-stage[data-screen-id="${screenId}"]`);
+
+            if (!video || !image || !placeholder || !label || !cursor || !stage) return;
+
+            if (!status || !status.active || !status.src) {
+                video.classList.add('hidden');
+                image.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+                label.style.display = 'block';
+                return;
+            }
+
+            placeholder.classList.add('hidden');
+            label.style.display = 'none';
+            const type = (status.tipo_media || inferPreviewType(status.src, status.mediaName)).toUpperCase();
+            const src = String(status.src).replace(/\\/g, '/');
+
+            if (type === 'FOTO') {
+                image.src = src;
+                image.classList.remove('hidden');
+                video.classList.add('hidden');
+            } else if (type === 'AUDIO') {
+                image.classList.add('hidden');
+                video.classList.add('hidden');
+                placeholder.classList.remove('hidden');
+            } else {
+                image.classList.add('hidden');
+                video.src = src;
+                video.classList.remove('hidden');
+                if (status.currentTime !== undefined && Number.isFinite(Number(status.currentTime))) {
+                    const nextTime = Number(status.currentTime);
+                    if (Math.abs(video.currentTime - nextTime) > 0.5) {
+                        video.currentTime = nextTime;
+                    }
+                }
+            }
+        }
+
+        const screenCursorTimers = {};
+
+        function showScreenCursor(screenId, event) {
+            const cursor = document.getElementById(`screen-${screenId}-cursor`);
+            const stage = document.querySelector(`.screen-preview-stage[data-screen-id="${screenId}"]`);
+            if (!cursor || !stage) return;
+            const rect = stage.getBoundingClientRect();
+            cursor.style.left = `${event.clientX - rect.left}px`;
+            cursor.style.top = `${event.clientY - rect.top}px`;
+            cursor.style.opacity = '0.85';
+            if (screenCursorTimers[screenId]) clearTimeout(screenCursorTimers[screenId]);
+            screenCursorTimers[screenId] = setTimeout(() => {
+                cursor.style.opacity = '0';
+            }, 2000);
+        }
+
+        function hideScreenCursor(screenId) {
+            const cursor = document.getElementById(`screen-${screenId}-cursor`);
+            if (cursor) cursor.style.opacity = '0';
+            if (screenCursorTimers[screenId]) clearTimeout(screenCursorTimers[screenId]);
+        }
+
         function syncScreenToWindow(screenId) {
             // Send current state to the opened window
             const video = document.getElementById(`screen-${screenId}-video`);
@@ -719,6 +1049,7 @@
         fetchSetlist();
         fetchQueue();
         fetchScreens();
+        setInterval(updateSlotClock, 100);
 
         function sendCommand(action, data = {}, screenId = null) {
             const command = {
@@ -734,9 +1065,18 @@
         function sendPlaybackCommand(action) {
             const screenSelect = document.getElementById('screen-select');
             const screenId = screenSelect.value ? parseInt(screenSelect.value) : null;
-            
-            // Get current slot media if available
-            const data = {};
+            const data = currentSlotId ? { slot_id: currentSlotId } : {};
+            if (action === 'play' && currentSlotId) {
+                if (slotClock.slotId && String(slotClock.slotId) === String(currentSlotId) && !slotClock.running) {
+                    resumeSlotClock();
+                } else {
+                    startSlotClock(currentSlotId);
+                }
+            } else if (action === 'pause') {
+                pauseSlotClock();
+            } else if (action === 'stop') {
+                resetSlotClock();
+            }
             
             sendCommand(action, data, screenId);
         }
@@ -744,11 +1084,6 @@
         function openWindow(type) {
             window.open(type, '_blank', 'width=1280,height=720');
             log(`Finestra ${type} aperta.`);
-        }
-
-        function sendToGobbo(talent, text) {
-            localStorage.setItem('gobbo_content', JSON.stringify({ talent, text, timestamp: Date.now() }));
-            log(`Gobbo aggiornato: ${talent}`);
         }
 
         function log(msg) {
@@ -809,6 +1144,7 @@
                         video.currentTime = status.currentTime || 0;
                         video.classList.toggle('opacity-50', !status.active);
                     }
+                    applyScreenPreview(status.screenId, status);
                 }
             }
         }
