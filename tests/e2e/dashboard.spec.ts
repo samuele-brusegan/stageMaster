@@ -29,8 +29,9 @@ test.describe('Dashboard', () => {
     await page.getByRole('button', { name: 'Crea Schermo' }).click();
     const popup = await popupPromise;
     await popup.waitForLoadState('domcontentloaded');
-
-    await expect(page.getByText(screenName.toUpperCase())).toBeVisible();
+    // The popup handles screen creation, then we check the main page
+    // Wait for the screen to appear on the main dashboard
+    await expect(page.getByText(screenName.toUpperCase(), { exact: true })).toBeVisible({ timeout: 10000 });
 
     const response = await request.get('/api/screens');
     const result = await response.json();

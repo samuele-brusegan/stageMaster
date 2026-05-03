@@ -11,7 +11,7 @@
 </head>
 <body class="h-full flex items-center justify-center overflow-hidden">
     <img id="main-image" class="hidden w-full h-full object-contain" alt="">
-    <video id="main-video" class="hidden w-full h-full object-contain" playsinline></video>
+    <video id="main-video" class="hidden w-full h-full object-contain" playsinline muted></video>
     <audio id="main-audio" class="hidden"></audio>
     <div id="audio-label" class="hidden text-white text-5xl font-bold text-center px-12"></div>
     <div id="empty-label" class="text-slate-600 text-3xl font-mono text-center px-12">Nessun media assegnato</div>
@@ -58,6 +58,14 @@
             setTimeout(() => syncOverlay.style.display = 'none', 500);
             console.log("Proiettore: Sincronizzazione attivata dall'utente.");
             
+            // Unmute video when user activates audio
+            video.muted = false;
+            
+            // Resume audio context if suspended
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            
             // Prova a riprodurre un breve suono silenzioso per sbloccare l'audio
             const buffer = audioCtx.createBuffer(1, 1, 22050);
             const node = audioCtx.createBufferSource();
@@ -76,15 +84,23 @@
         let audioCtx;
         let gainNode;
         let source;
+        let webAudioConnected = false;
 
         function initAudio() {
             if (audioCtx) return;
             console.log("Proiettore: Inizializzazione Web Audio API...");
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             gainNode = audioCtx.createGain();
+        }
+
+        function connectWebAudio() {
+            if (webAudioConnected) return;
+            if (!audioCtx) initAudio();
+            console.log("Proiettore: Connessione video a Web Audio API...");
             source = audioCtx.createMediaElementSource(video);
             source.connect(gainNode);
             gainNode.connect(audioCtx.destination);
+            webAudioConnected = true;
         }
 
         function hideAllMedia() {
@@ -292,6 +308,9 @@
         function fadeIn(duration = 1) {
             if (!audioCtx) initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Only connect to Web Audio when fade effects are needed
+            connectWebAudio();
 
             overlay.style.opacity = '0';
             gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -303,6 +322,9 @@
         function fadeOut(duration = 1) {
             if (!audioCtx) initAudio();
             if (audioCtx.state === 'suspended') audioCtx.resume();
+            
+            // Only connect to Web Audio when fade effects are needed
+            connectWebAudio();
 
             overlay.style.opacity = '1';
             gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
