@@ -283,7 +283,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Authors
 
-- **Brusegan Samuele** - [samuele@example.com](mailto:samuele@example.com)
+- **Brusegan Samuele** - [samuele@brusegan.it](mailto:samuele@brusegan.it)
 
 ## Acknowledgments
 
