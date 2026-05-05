@@ -11,7 +11,7 @@
 </head>
 <body class="h-full flex items-center justify-center overflow-hidden">
     <img id="main-image" class="hidden w-full h-full object-contain" alt="">
-    <video id="main-video" class="hidden w-full h-full object-contain" playsinline muted></video>
+    <video id="main-video" class="hidden w-full h-full object-contain" playsinline></video>
     <audio id="main-audio" class="hidden"></audio>
     <div id="audio-label" class="hidden text-white text-5xl font-bold text-center px-12"></div>
     <div id="empty-label" class="text-slate-600 text-3xl font-mono text-center px-12">Nessun media assegnato</div>
@@ -45,22 +45,38 @@
         let currentMediaType = null;
         let slotTimeline = [];
         let activeTimelineMediaId = null;
+        let timelineLoadToken = 0;
         let timelineState = {
             slotId: null,
             startedAt: null,
             pausedAt: null,
             playing: false
         };
+        let audioEnabled = false;
+
+        function applyAudioState() {
+            video.muted = !audioEnabled;
+            video.defaultMuted = !audioEnabled;
+            audio.muted = !audioEnabled;
+            audio.defaultMuted = !audioEnabled;
+            video.volume = 1;
+            audio.volume = 1;
+            if (audioEnabled && gainNode && audioCtx) {
+                gainNode.gain.cancelScheduledValues(audioCtx.currentTime);
+                gainNode.gain.setValueAtTime(1, audioCtx.currentTime);
+            }
+            if (syncOverlay) {
+                syncOverlay.style.display = audioEnabled ? 'none' : 'block';
+                syncOverlay.style.opacity = audioEnabled ? '0' : '1';
+            }
+        }
 
         function activateSync() {
             initAudio();
-            syncOverlay.style.opacity = '0';
-            setTimeout(() => syncOverlay.style.display = 'none', 500);
+            audioEnabled = true;
+            applyAudioState();
             console.log("Proiettore: Sincronizzazione attivata dall'utente.");
-            
-            // Unmute video when user activates audio
-            video.muted = false;
-            
+
             // Resume audio context if suspended
             if (audioCtx.state === 'suspended') {
                 audioCtx.resume();
@@ -121,6 +137,8 @@
         }
 
         function showBlack() {
+            if (currentMediaType === 'VIDEO') video.pause();
+            if (currentMediaType === 'AUDIO') audio.pause();
             hideAllMedia();
             overlay.style.opacity = '0';
             currentMediaPath = null;
@@ -153,6 +171,7 @@
             activeTimelineMediaId = mediaId;
             hideAllMedia();
             overlay.style.opacity = '0';
+            applyAudioState();
 
             if (type === 'FOTO') {
                 image.src = path;
@@ -187,8 +206,16 @@
         }
 
         function playCurrentMedia() {
+            applyAudioState();
             if (currentMediaType === 'VIDEO' && video.src) {
-                video.play().catch(err => console.error("Proiettore: Errore play video:", err));
+                video.play().catch(err => {
+                    if (!audioEnabled) {
+                        video.muted = true;
+                        video.play().catch(retryErr => console.error("Proiettore: Errore play video muto:", retryErr));
+                        return;
+                    }
+                    console.error("Proiettore: Errore play video con audio:", err);
+                });
             } else if (currentMediaType === 'AUDIO' && audio.src) {
                 audio.play().catch(err => console.error("Proiettore: Errore play audio:", err));
             }
@@ -227,21 +254,35 @@
             return Math.max(1, end - start || 1);
         }
 
-        async function loadSlotTimeline(slotId) {
+        function slotTimelineEndSeconds() {
+            if (slotTimeline.length === 0) return 0;
+            return Math.max(...slotTimeline.map(media => timelineSeconds(media.timestamp_inizio) + timelineDuration(media)));
+        }
+
+        async function loadSlotTimeline(slotId, requestToken) {
             const response = await fetch(`/api/media/talento?talento_id=${slotId}`);
             const media = await response.json();
+            if (requestToken !== timelineLoadToken || String(timelineState.slotId) !== String(slotId)) {
+                return false;
+            }
             slotTimeline = (Array.isArray(media) ? media : [])
                 .filter(item => String(item.screen_id) === String(screenId))
                 .sort((a, b) => timelineSeconds(a.timestamp_inizio) - timelineSeconds(b.timestamp_inizio));
             activeTimelineMediaId = null;
+            return true;
         }
 
         async function startSlot(slotId) {
+            const requestToken = ++timelineLoadToken;
             timelineState.slotId = slotId;
             timelineState.startedAt = Date.now();
             timelineState.pausedAt = null;
             timelineState.playing = true;
-            await loadSlotTimeline(slotId);
+            slotTimeline = [];
+            activeTimelineMediaId = null;
+            showBlack();
+            const loaded = await loadSlotTimeline(slotId, requestToken);
+            if (!loaded) return;
             if (slotTimeline.length === 0) {
                 showBlack();
                 return;
@@ -268,6 +309,7 @@
         }
 
         function stopSlot() {
+            timelineLoadToken++;
             timelineState = { slotId: null, startedAt: null, pausedAt: null, playing: false };
             slotTimeline = [];
             if (currentMediaType === 'VIDEO') {
@@ -281,9 +323,23 @@
             showBlack();
         }
 
+        function completeSlot() {
+            timelineState.playing = false;
+            timelineState.pausedAt = null;
+            timelineState.startedAt = null;
+            slotTimeline = [];
+            showBlack();
+        }
+
         function tickTimeline() {
             if (!timelineState.playing || !timelineState.startedAt) return;
             const elapsed = (Date.now() - timelineState.startedAt) / 1000;
+            const timelineEnd = slotTimelineEndSeconds();
+            if (timelineEnd > 0 && elapsed >= timelineEnd) {
+                completeSlot();
+                return;
+            }
+
             const active = slotTimeline.find(media => {
                 const start = timelineSeconds(media.timestamp_inizio);
                 return elapsed >= start && elapsed < start + timelineDuration(media);
@@ -396,6 +452,10 @@
         }
 
         function syncFromDashboard(state) {
+            if (!state || !state.active) {
+                showBlack();
+                return;
+            }
             if (state.src) {
                 displayMedia({
                     id: state.media_id || null,
@@ -443,12 +503,11 @@
 
         // Initialize with black screen
         overlay.style.opacity = '0';
-        loadScreenMedia();
+        applyAudioState();
+        showBlack();
         setInterval(() => {
             if (timelineState.playing) {
                 tickTimeline();
-            } else if (!timelineState.slotId) {
-                loadScreenMedia();
             }
         }, 250);
     </script>

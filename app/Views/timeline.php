@@ -199,6 +199,14 @@
             renderTimeline();
         }
 
+        function publishTimelineChanged() {
+            if (!currentSlotId) return;
+            localStorage.setItem('timeline_updated', JSON.stringify({
+                slotId: String(currentSlotId),
+                timestamp: Date.now()
+            }));
+        }
+
         async function hydrateVideoDurations() {
             const updates = timelineMedia
                 .filter(media => (media.tipo_media || '').toUpperCase() === 'VIDEO' && !Number(media.durata_totale_sec))
@@ -215,7 +223,10 @@
                         })
                     });
                 }).catch(() => null));
-            await Promise.all(updates);
+            const results = await Promise.all(updates);
+            if (results.some(Boolean)) {
+                publishTimelineChanged();
+            }
         }
 
         function loadVideoDuration(media) {
@@ -444,6 +455,7 @@
                         timestamp_fine: media.timestamp_fine
                     })
                 });
+                publishTimelineChanged();
             }, { once: true });
         }
 
@@ -477,6 +489,7 @@
             if (result.status === 'ok') {
                 Object.assign(media, payload);
                 renderTimeline();
+                publishTimelineChanged();
             }
         }
 
@@ -485,6 +498,7 @@
             await fetch(`/api/media?id=${selectedMediaId}`, { method: 'DELETE' });
             selectedMediaId = null;
             await fetchTimeline();
+            publishTimelineChanged();
         }
 
         function addMediaSlot() {
@@ -519,6 +533,9 @@
             if (showMessage && result.status === 'ok') {
                 document.getElementById('slot-name').textContent += ' - salvata';
                 setTimeout(fetchSlotInfo, 1200);
+            }
+            if (result.status === 'ok') {
+                publishTimelineChanged();
             }
         }
 

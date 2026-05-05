@@ -355,8 +355,10 @@
             slotName: null,
             startedAt: null,
             accumulatedMs: 0,
-            running: false
+            running: false,
+            completed: false
         };
+        let dashboardTimelineEndMs = null;
 
         async function fetchSetlist() {
             try {
@@ -472,30 +474,43 @@
         }
 
         let currentSlotId = null;
+        let timelineRequestToken = 0;
+        let dashboardTimelineSignature = null;
 
         function selectSlot(slotId) {
+            activateSlot(slotId, { logMessage: `Slot selezionato: ${slotId}` });
+        }
+
+        function activateSlot(slotId, options = {}) {
+            if (!slotId) return;
+            const changed = String(currentSlotId) !== String(slotId);
             currentSlotId = slotId;
-            log(`Slot selezionato: ${slotId}`);
+            if (options.publish !== false && changed) {
+                localStorage.setItem('active_slot', JSON.stringify({
+                    slotId: String(slotId),
+                    timestamp: Date.now()
+                }));
+            }
+            if (options.logMessage) log(options.logMessage);
             fetchNotes(slotId);
-            loadTimeline(slotId);
+            loadTimeline(slotId, { force: true, silent: Boolean(options.silent && !changed) });
         }
 
         async function startSlot(slotId) {
-            selectSlot(slotId);
+            activateSlot(slotId, { logMessage: `Slot avviato: ${slotId}` });
             startSlotClock(slotId);
             sendCommand('play', { slot_id: slotId });
-            log(`Slot avviato: ${slotId}`);
         }
 
         function pauseSlot(slotId) {
-            if (slotId) currentSlotId = slotId;
+            if (slotId) activateSlot(slotId, { silent: true });
             pauseSlotClock();
             sendCommand('pause', { slot_id: slotId || currentSlotId });
             log(`Slot in pausa: ${slotId || currentSlotId || 'corrente'}`);
         }
 
         function stopSlot(slotId) {
-            if (slotId) currentSlotId = slotId;
+            if (slotId) activateSlot(slotId, { silent: true });
             resetSlotClock();
             sendCommand('stop', { slot_id: slotId || currentSlotId });
             log(`Slot fermato: ${slotId || currentSlotId || 'corrente'}`);
@@ -508,6 +523,7 @@
             slotClock.startedAt = Date.now();
             slotClock.accumulatedMs = 0;
             slotClock.running = true;
+            slotClock.completed = false;
             updateSlotClock();
         }
 
@@ -523,6 +539,7 @@
             if (!slotClock.slotId || slotClock.running) return;
             slotClock.startedAt = Date.now();
             slotClock.running = true;
+            slotClock.completed = false;
             updateSlotClock();
         }
 
@@ -532,11 +549,23 @@
             slotClock.startedAt = null;
             slotClock.accumulatedMs = 0;
             slotClock.running = false;
+            slotClock.completed = false;
             updateSlotClock();
         }
 
         function elapsedSlotMs() {
-            return slotClock.accumulatedMs + (slotClock.running && slotClock.startedAt ? Date.now() - slotClock.startedAt : 0);
+            const elapsed = slotClock.accumulatedMs + (slotClock.running && slotClock.startedAt ? Date.now() - slotClock.startedAt : 0);
+            return dashboardTimelineEndMs ? Math.min(elapsed, dashboardTimelineEndMs) : elapsed;
+        }
+
+        function stopSlotClockAtEnd() {
+            if (!slotClock.running || !dashboardTimelineEndMs) return;
+            const rawElapsed = slotClock.accumulatedMs + (slotClock.startedAt ? Date.now() - slotClock.startedAt : 0);
+            if (rawElapsed < dashboardTimelineEndMs) return;
+            slotClock.accumulatedMs = dashboardTimelineEndMs;
+            slotClock.startedAt = null;
+            slotClock.running = false;
+            slotClock.completed = true;
         }
 
         function formatSlotClock(ms) {
@@ -553,24 +582,64 @@
             const state = document.getElementById('slot-clock-state');
             const name = document.getElementById('slot-clock-name');
             if (!clock || !state || !name) return;
+            stopSlotClockAtEnd();
             clock.textContent = formatSlotClock(elapsedSlotMs());
-            state.textContent = slotClock.running ? 'running' : slotClock.slotId ? 'pausa' : 'fermo';
+            state.textContent = slotClock.running ? 'running' : slotClock.completed ? 'fine' : slotClock.slotId ? 'pausa' : 'fermo';
             name.textContent = slotClock.slotName || 'Nessuno slot avviato';
             updateDashboardPlayhead();
         }
 
-        async function loadTimeline(slotId) {
+        function dashboardTimelineMediaSignature(media) {
+            return JSON.stringify(media.map(item => ({
+                id: String(item.id),
+                screen_id: String(item.screen_id || ''),
+                screen_nome: item.screen_nome || '',
+                friendly_name: item.friendly_name || '',
+                file_path: item.file_path || '',
+                tipo_media: item.tipo_media || '',
+                timestamp_inizio: item.timestamp_inizio || '',
+                timestamp_fine: item.timestamp_fine || '',
+                durata_totale_sec: Number(item.durata_totale_sec) || 0,
+                ordine_esecuzione: Number(item.ordine_esecuzione) || 0
+            })));
+        }
+
+        async function loadTimeline(slotId, options = {}) {
             const slot = window.currentTalenti?.find(t => t.id == slotId);
             if (slot) {
-                document.getElementById('current-slot-name').textContent = `- ${slot.nome}`;
-                document.getElementById('no-slot-message').classList.add('hidden');
+                const silent = Boolean(options.silent);
+                const force = Boolean(options.force);
+                const requestToken = ++timelineRequestToken;
                 const timeline = document.getElementById('timeline');
-                timeline.innerHTML = '<div class="text-slate-500 text-sm">Caricamento timeline...</div>';
+                const currentSlotName = document.getElementById('current-slot-name');
+                const noSlotMessage = document.getElementById('no-slot-message');
+                if (!timeline || !currentSlotName) return;
+
+                currentSlotName.textContent = `- ${slot.nome}`;
+                if (noSlotMessage) noSlotMessage.classList.add('hidden');
+                if (!silent) {
+                    dashboardTimelineEndMs = null;
+                    dashboardTimelineSignature = null;
+                    timeline.innerHTML = '<div class="text-slate-500 text-sm">Caricamento timeline...</div>';
+                }
                 try {
                     const response = await fetch(`/api/media/talento?talento_id=${slotId}`);
                     const media = await response.json();
-                    renderDashboardTimeline(Array.isArray(media) ? media : []);
+                    if (requestToken !== timelineRequestToken || String(currentSlotId) !== String(slotId)) {
+                        return;
+                    }
+                    const safeMedia = Array.isArray(media) ? media : [];
+                    const signature = dashboardTimelineMediaSignature(safeMedia);
+                    if (silent && !force && signature === dashboardTimelineSignature) {
+                        return;
+                    }
+                    dashboardTimelineSignature = signature;
+                    renderDashboardTimeline(safeMedia);
                 } catch (error) {
+                    if (requestToken !== timelineRequestToken || String(currentSlotId) !== String(slotId)) {
+                        return;
+                    }
+                    if (silent) return;
                     console.error("Dashboard: Errore timeline:", error);
                     timeline.innerHTML = '<div class="text-red-400 text-sm">Errore caricamento timeline</div>';
                 }
@@ -589,6 +658,7 @@
             const timeline = document.getElementById('timeline');
             timeline.innerHTML = '';
             if (media.length === 0) {
+                dashboardTimelineEndMs = 0;
                 timeline.innerHTML = '<div class="w-full text-center text-slate-500 text-sm">Nessun media nello slot</div>';
                 return;
             }
@@ -598,6 +668,11 @@
                 const duration = Number(item.durata_totale_sec) || Math.max(10, timelineSeconds(item.timestamp_fine) - start || 10);
                 return start + duration;
             }));
+            dashboardTimelineEndMs = Math.max(...media.map(item => {
+                const start = timelineSeconds(item.timestamp_inizio);
+                const duration = Number(item.durata_totale_sec) || Math.max(10, timelineSeconds(item.timestamp_fine) - start || 10);
+                return start + duration;
+            })) * 1000;
             const width = Math.max(720, maxEnd * pxPerSecond + 80);
             const axis = document.createElement('div');
             axis.className = 'flex items-end gap-2 mb-1 text-[10px] text-slate-500';
@@ -786,8 +861,7 @@
                 if (select) {
                     select.value = screen.tipo;
                 }
-                // Load media for this screen as preview
-                loadScreenPreview(screen.id);
+                applyScreenPreview(screen.id, { active: false });
             });
         }
 
@@ -981,12 +1055,17 @@
 
             if (!status || !status.active || !status.src) {
                 video.classList.add('hidden');
+                video.removeAttribute('src');
+                video.load();
                 image.classList.add('hidden');
-                placeholder.classList.remove('hidden');
-                label.style.display = 'block';
+                image.removeAttribute('src');
+                placeholder.classList.add('hidden');
+                label.style.display = 'none';
+                stage.dataset.active = 'false';
                 return;
             }
 
+            stage.dataset.active = 'true';
             placeholder.classList.add('hidden');
             label.style.display = 'none';
             const type = (status.tipo_media || inferPreviewType(status.src, status.mediaName)).toUpperCase();
@@ -1038,7 +1117,8 @@
         function syncScreenToWindow(screenId) {
             // Send current state to the opened window
             const video = document.getElementById(`screen-${screenId}-video`);
-            if (video && video.src) {
+            const stage = document.querySelector(`.screen-preview-stage[data-screen-id="${screenId}"]`);
+            if (video && video.src && stage?.dataset.active === 'true') {
                 const state = {
                     screenId,
                     src: video.src,
@@ -1085,8 +1165,16 @@
         fetchQueue();
         fetchScreens();
         setInterval(updateSlotClock, 100);
+        setInterval(() => {
+            if (currentSlotId) {
+                loadTimeline(currentSlotId, { silent: true });
+            }
+        }, 2000);
 
         function sendCommand(action, data = {}, screenId = null) {
+            if (action === 'play' && data.slot_id) {
+                activateSlot(data.slot_id, { silent: true });
+            }
             const command = {
                 action,
                 data,
@@ -1155,9 +1243,24 @@
             if (e.key === 'screen_state') {
                 const status = JSON.parse(e.newValue);
                 updateScreenStatus(status);
+            } else if (e.key === 'regia_command' && e.newValue) {
+                const command = JSON.parse(e.newValue);
+                if (command.action === 'play' && command.data?.slot_id) {
+                    activateSlot(command.data.slot_id, { silent: true });
+                }
+            } else if (e.key === 'active_slot' && e.newValue) {
+                const activeSlot = JSON.parse(e.newValue);
+                if (activeSlot.slotId) {
+                    activateSlot(activeSlot.slotId, { silent: true, publish: false });
+                }
             } else if (e.key === 'queue_state') {
                 const queue = JSON.parse(e.newValue);
                 renderQueue(queue);
+            } else if (e.key === 'timeline_updated' && e.newValue) {
+                const update = JSON.parse(e.newValue);
+                if (currentSlotId && String(update.slotId) === String(currentSlotId)) {
+                    loadTimeline(currentSlotId, { silent: true, force: true });
+                }
             }
         });
 
