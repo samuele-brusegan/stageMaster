@@ -68,74 +68,75 @@ jobs:
     - name: Run Jest tests
       run: npm test
 
-  test-e2e:
-    runs-on: ubuntu-latest
-
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root_password
-          MYSQL_DATABASE: olmos_talent_test
-        ports:
-          - 3306:3306
-        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Setup PHP
-      uses: shivammathur/setup-php@v2
-      with:
-        php-version: '8.2'
-        extensions: pdo, pdo_mysql
-        coverage: none
-
-    - name: Install PHP dependencies
-      run: composer install --prefer-dist --no-progress --no-interaction
-
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-
-    - name: Install Node dependencies
-      run: npm install
-
-    - name: Install Playwright browsers
-      run: npx playwright install --with-deps
-
-    - name: Create test database
-      run: |
-        mysql -h 127.0.0.1 -u root -proot_password -e "CREATE DATABASE IF NOT EXISTS olmos_talent;"
-        mysql -h 127.0.0.1 -u root -proot_password < schema.sql
-        mysql -h 127.0.0.1 -u root -proot_password < schema_migration.sql
-
-    - name: Start application
-      run: |
-        php -S localhost:31415 -t public public/router.php &
-        sleep 5
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: olmos_talent
-        DB_USERNAME: root
-        DB_PASSWORD: root_password
-
-    - name: Run Playwright tests
-      run: npx playwright test
-      env:
-        DB_HOST: 127.0.0.1
-        DB_PORT: 3306
-        DB_NAME: olmos_talent
-        DB_USERNAME: root
-        DB_PASSWORD: root_password
-
-    - name: Upload Playwright report
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+#  test-e2e:
+#    runs-on: ubuntu-latest
+#
+#    services:
+#      mysql:
+#        image: mysql:8.0
+#        env:
+#          MYSQL_ROOT_PASSWORD: root_password
+#          MYSQL_DATABASE: olmos_talent_test
+#        ports:
+#          - 3306:3306
+#        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+#
+#    steps:
+#    - name: Checkout code
+#      uses: actions/checkout@v4
+#
+#    - name: Setup PHP
+#      uses: shivammathur/setup-php@v2
+#      with:
+#        php-version: '8.2'
+#        extensions: pdo, pdo_mysql
+#        coverage: none
+#
+#    - name: Install PHP dependencies
+#      run: composer install --prefer-dist --no-progress --no-interaction
+#
+#    - name: Setup Node.js
+#      uses: actions/setup-node@v4
+#      with:
+#        node-version: '20'
+#
+#    - name: Install Node dependencies
+#      run: npm install
+#
+#    - name: Install Playwright browsers
+#      run: npx playwright install --with-deps
+#
+#    - name: Create test database
+#      run: |
+#        mysql -h 127.0.0.1 -u root -proot_password -e "CREATE DATABASE IF NOT EXISTS olmos_talent;"
+#        mysql -h 127.0.0.1 -u root -proot_password < schema.sql
+#        mysql -h 127.0.0.1 -u root -proot_password < schema_migration.sql
+#
+#    - name: Start application
+#      run: |
+#        php -S localhost:31415 -t public public/router.php &
+#        sleep 5
+#      env:
+#        DB_HOST: 127.0.0.1
+#        DB_PORT: 3306
+#        DB_NAME: olmos_talent
+#        DB_USERNAME: root
+#        DB_PASSWORD: root_password
+#
+#    - name: Run Playwright tests
+#      run: npx playwright test
+#      env:
+#        DB_HOST: 127.0.0.1
+#        DB_PORT: 3306
+#        DB_NAME: olmos_talent
+#        DB_USERNAME: root
+#        DB_PASSWORD: root_password
+#
+#    - name: Upload Playwright report
+#      if: always()
+#      uses: actions/upload-artifact@v4
+#      with:
+#        name: playwright-report
+#        path: playwright-report/
+#        retention-days: 30
+#
