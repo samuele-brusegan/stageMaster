@@ -18,12 +18,7 @@
 <link rel="stylesheet" href="<?=URL_PATH?>/css/style.css">
 
 <!--PWA-->
-<link rel="icon" type="image/png" href="<?=URL_PATH?>/pwa/favicon-96x96.png" sizes="96x96" />
-<link rel="icon" type="image/svg+xml" href="<?=URL_PATH?>/pwa/favicon.svg" />
-<link rel="shortcut icon" href="<?=URL_PATH?>/pwa/favicon.ico" />
-<link rel="apple-touch-icon" sizes="180x180" href="<?=URL_PATH?>/pwa/apple-touch-icon.png" />
-<meta name="apple-mobile-web-app-title" content="Actv Live" />
-<link rel="manifest" href="<?=URL_PATH?>/pwa/site.webmanifest" />
+<?php require BASE_PATH . '/public/commons/favicon.php'; ?>
 
 <link rel="stylesheet" href="<?=URL_PATH?>/css/cookie-notice.css">
 <script src="/js/cookie-notice.js"></script>

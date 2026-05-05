@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Proiettore - Olmo's Got Talent</title>
+    <?php require BASE_PATH . '/public/commons/favicon.php'; ?>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { cursor: none; }
