@@ -13,15 +13,23 @@ function getDatabaseConnection() {
         foreach ($lines as $line) {
             if (strpos(trim($line), '#') === 0) continue;
             list($name, $value) = explode('=', $line, 2);
-            $_ENV[trim($name)] = trim($value);
+            $name = trim($name);
+            if (getenv($name) === false && !isset($_ENV[$name])) {
+                $_ENV[$name] = trim($value);
+            }
         }
     }
 
-    $host = $_ENV['DB_HOST'] ?? 'db';
-    $port = $_ENV['DB_PORT'] ?? null;
-    $db   = $_ENV['DB_NAME'] ?? 'olmos_talent';
-    $user = $_ENV['DB_USERNAME'] ?? 'olmos_user';
-    $pass = $_ENV['DB_PASSWORD'] ?? 'user_password';
+    $env = static function (string $name, $default = null) {
+        $value = getenv($name);
+        return $value !== false ? $value : ($_ENV[$name] ?? $default);
+    };
+
+    $host = $env('DB_HOST', 'db');
+    $port = $env('DB_PORT');
+    $db   = $env('DB_NAME', 'olmos_talent');
+    $user = $env('DB_USERNAME', 'olmos_user');
+    $pass = $env('DB_PASSWORD', 'user_password');
     $charset = 'utf8mb4';
 
     $portPart = $port ? ";port=$port" : '';

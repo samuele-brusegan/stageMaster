@@ -89,14 +89,14 @@
         }
 
         /* Responsive sidebar toggle */
-        @media (max-width: 1280px) {
+        @media (max-width: 1023px) {
             .sidebar-left { transform: translateX(-100%); position: absolute; z-index: 40; transition: transform 0.3s ease; }
             .sidebar-left.open { transform: translateX(0); }
             .sidebar-right { transform: translateX(100%); position: absolute; right: 0; z-index: 40; transition: transform 0.3s ease; }
             .sidebar-right.open { transform: translateX(0); }
         }
 
-        @media (min-width: 1281px) {
+        @media (min-width: 1024px) {
             .sidebar-left { position: relative; }
             .sidebar-right { position: relative; }
         }
@@ -742,7 +742,7 @@
                 const result = await response.json();
                 if (result.status === 'ok') {
                     log(`Schermo "${name}" creato con successo`);
-                    fetchScreens();
+                    await fetchScreens();
                     if (screenWindow) {
                         screenWindow.location.href = `/${type}?screen_id=${result.id}`;
                     } else {

@@ -114,7 +114,7 @@ jobs:
 
     - name: Start application
       run: |
-        php -S localhost:31415 -t public &
+        php -S localhost:31415 -t public public/router.php &
         sleep 5
       env:
         DB_HOST: 127.0.0.1

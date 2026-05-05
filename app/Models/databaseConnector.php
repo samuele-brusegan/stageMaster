@@ -7,7 +7,7 @@ class DatabaseConnector {
         try {
             $this->connection = getDatabaseConnection();
         } catch (PDOException $e) {
-            die("Connection failed: " . $e->getMessage());
+            throw new RuntimeException("Connection failed: " . $e->getMessage(), 0, $e);
         }
     }
 

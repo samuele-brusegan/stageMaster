@@ -720,17 +720,21 @@
             }[char]));
         }
 
-        function openMediaWizard(slotId = null) {
+        async function openMediaWizard(slotId = null) {
             mediaWizard.step = 1;
             mediaWizard.source = 'library';
             mediaWizard.selectedMedia = null;
             mediaWizard.duplicate = false;
 
+            await Promise.all([
+                window.mediaLibraryData ? Promise.resolve() : fetchMediaLibrary(),
+                window.currentScreens ? Promise.resolve() : fetchScreens()
+            ]);
             populateWizardSlotSelect(slotId);
             populateWizardScreenSelect();
             setWizardSource('library');
-            renderWizardMediaList();
             document.getElementById('wizard-media-search').value = '';
+            renderWizardMediaList();
             document.getElementById('wizard-file-input').value = '';
             document.getElementById('wizard-save-btn').onclick = () => submitMediaWizard(false);
             document.getElementById('wizard-save-btn').textContent = 'Salva';
@@ -1137,10 +1141,12 @@
                 if (result.status === 'ok') {
                     renderScreensList(result.data);
                     populateScreenSelect(result.data);
+                    return result.data;
                 }
             } catch (error) {
                 console.error("Admin: Errore nel recupero schermi:", error);
             }
+            return [];
         }
 
         function renderScreensList(screens) {
@@ -1342,10 +1348,12 @@
                 if (result.status === 'ok') {
                     renderMediaLibrary(result.data);
                     populateMediaLibrarySelect(result.data);
+                    return result.data;
                 }
             } catch (error) {
                 console.error("Admin: Errore nel recupero media library:", error);
             }
+            return [];
         }
 
         function renderMediaLibrary(media) {
