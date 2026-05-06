@@ -52,7 +52,6 @@ class MediaController extends ApiController {
         ]);
 
         $mediaLibrary = new \App\Models\MediaLibrary($this->db);
-        $queueModel = new \App\Models\MediaQueue($this->db);
         $transitionModel = new \App\Models\Transizione($this->db);
         $screenModel = new \App\Models\Screen($this->db);
         $talentoModel = new \App\Models\Talento($this->db);
@@ -92,19 +91,12 @@ class MediaController extends ApiController {
                 'durata_sec' => 0
             ]);
 
-            $queueId = $queueModel->add([
-                'talento_id' => (int)$data['talento_id'],
-                'media_id' => $mediaId,
-                'stato' => 'pending'
-            ]);
-
             $this->db->commit();
             $this->json([
                 'status' => 'ok',
                 'media_id' => $mediaId,
                 'transition_id' => $transitionId,
-                'queue_id' => $queueId,
-                'message' => 'Media aggiunto allo slot e alla coda'
+                'message' => 'Media aggiunto allo slot'
             ]);
         } catch (\Exception $e) {
             $this->db->rollBack();

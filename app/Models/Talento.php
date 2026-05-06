@@ -49,8 +49,18 @@ class Talento {
                 ordine_scaletta = :ordine_scaletta 
                 WHERE id = :id";
         $stmt = $this->db->prepare($sql);
-        $data['id'] = $id;
-        return $stmt->execute($data);
+        
+        // Ensure all required parameters exist
+        $params = [
+            'nome' => $data['nome'] ?? '',
+            'categoria' => $data['categoria'] ?? null,
+            'materiale_palco' => $data['materiale_palco'] ?? null,
+            'note_luci' => $data['note_luci'] ?? null,
+            'ordine_scaletta' => $data['ordine_scaletta'] ?? null,
+            'id' => $id
+        ];
+        
+        return $stmt->execute($params);
     }
 
     /**

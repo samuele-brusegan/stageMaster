@@ -25,7 +25,7 @@ class MediaLibraryController extends ApiController {
     }
 
     /**
-     * Upload a new media file
+     * Upload one or more media files
      */
     public function upload() {
         try {
@@ -38,79 +38,133 @@ class MediaLibraryController extends ApiController {
                 ], 413);
             }
 
-            if (!isset($_FILES['file']) || $_FILES['file']['error'] !== UPLOAD_ERR_OK) {
-                $message = $this->uploadErrorMessage($_FILES['file']['error'] ?? UPLOAD_ERR_NO_FILE);
-                $this->json(['status' => 'error', 'message' => $message], 400);
+            if (!isset($_FILES['file'])) {
+                $this->json(['status' => 'error', 'message' => 'Nessun file selezionato'], 400);
             }
 
-            $file = $_FILES['file'];
-            $fileName = $file['name'];
-            $fileTmp = $file['tmp_name'];
-            $fileSize = $file['size'];
-            $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+            $files = $_FILES['file'];
+            
+            // Handle single file upload
+            if (!is_array($files['name'])) {
+                if ($files['error'] !== UPLOAD_ERR_OK) {
+                    $message = $this->uploadErrorMessage($files['error']);
+                    $this->json(['status' => 'error', 'message' => $message], 400);
+                }
+                
+                $result = $this->processSingleFile($files, $maxUploadBytes);
+                $this->json(['status' => 'ok', 'data' => $result]);
+                return;
+            }
 
-            if ($fileSize > $maxUploadBytes) {
+            // Handle multiple files upload
+            $uploadedFiles = [];
+            $failedFiles = [];
+
+            for ($i = 0; $i < count($files['name']); $i++) {
+                if ($files['error'][$i] !== UPLOAD_ERR_OK) {
+                    $failedFiles[] = [
+                        'file' => $files['name'][$i],
+                        'error' => $this->uploadErrorMessage($files['error'][$i])
+                    ];
+                    continue;
+                }
+
+                $fileData = [
+                    'name' => $files['name'][$i],
+                    'tmp_name' => $files['tmp_name'][$i],
+                    'size' => $files['size'][$i],
+                    'error' => $files['error'][$i]
+                ];
+
+                try {
+                    $result = $this->processSingleFile($fileData, $maxUploadBytes);
+                    $uploadedFiles[] = $result;
+                } catch (\Exception $e) {
+                    $failedFiles[] = [
+                        'file' => $files['name'][$i],
+                        'error' => $e->getMessage()
+                    ];
+                }
+            }
+
+            if (empty($uploadedFiles) && !empty($failedFiles)) {
                 $this->json([
                     'status' => 'error',
-                    'message' => 'File troppo grande. Limite massimo: 200 MB'
-                ], 413);
+                    'message' => 'Nessun file è stato caricato con successo',
+                    'failed_files' => $failedFiles
+                ], 400);
             }
 
-            // Determine file type
-            $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
-            $audioExts = ['mp3', 'wav', 'ogg', 'flac'];
-
-            if (in_array($fileExt, $imageExts)) {
-                $fileType = 'FOTO';
-            } elseif (in_array($fileExt, $videoExts)) {
-                $fileType = 'VIDEO';
-            } elseif (in_array($fileExt, $audioExts)) {
-                $fileType = 'AUDIO';
-            } else {
-                $this->json(['status' => 'error', 'message' => 'Unsupported file type'], 400);
+            $response = ['status' => 'ok', 'data' => $uploadedFiles];
+            if (!empty($failedFiles)) {
+                $response['failed_files'] = $failedFiles;
             }
-
-            // Generate unique filename
-            $baseName = pathinfo($fileName, PATHINFO_FILENAME);
-            $uniqueName = $baseName . '_' . time() . '.' . $fileExt;
-            $uploadPath = __DIR__ . '/../../public/media/' . $uniqueName;
-            $webPath = '/media/' . $uniqueName;
-
-            // Move file
-            if (!move_uploaded_file($fileTmp, $uploadPath)) {
-                $this->json(['status' => 'error', 'message' => 'Failed to move uploaded file'], 500);
-            }
-
-            // Get duration for video/audio (requires ffprobe)
-            $durationSec = null;
-            if ($fileType === 'VIDEO' || $fileType === 'AUDIO') {
-                $durationSec = $this->getMediaDuration($uploadPath);
-            }
-
-            // Save to database
-            $mediaId = $this->mediaLibrary->create([
-                'file_name' => $fileName,
-                'file_path' => $webPath,
-                'file_type' => $fileType,
-                'file_size' => $fileSize,
-                'duration_sec' => $durationSec
-            ]);
-
-            $this->json([
-                'status' => 'ok',
-                'data' => [
-                    'id' => $mediaId,
-                    'file_name' => $fileName,
-                    'file_path' => $webPath,
-                    'file_type' => $fileType,
-                    'file_size' => $fileSize,
-                    'duration_sec' => $durationSec
-                ]
-            ]);
+            
+            $this->json($response);
         } catch (\Exception $e) {
             $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
+    }
+
+    private function processSingleFile($file, $maxUploadBytes) {
+        $fileName = $file['name'];
+        $fileTmp = $file['tmp_name'];
+        $fileSize = $file['size'];
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+
+        if ($fileSize > $maxUploadBytes) {
+            throw new \Exception('File troppo grande. Limite massimo: 200 MB');
+        }
+
+        // Determine file type
+        $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+        $videoExts = ['mp4', 'webm', 'ogg', 'mov'];
+        $audioExts = ['mp3', 'wav', 'ogg', 'flac'];
+
+        if (in_array($fileExt, $imageExts)) {
+            $fileType = 'FOTO';
+        } elseif (in_array($fileExt, $videoExts)) {
+            $fileType = 'VIDEO';
+        } elseif (in_array($fileExt, $audioExts)) {
+            $fileType = 'AUDIO';
+        } else {
+            throw new \Exception('Unsupported file type');
+        }
+
+        // Generate unique filename
+        $baseName = pathinfo($fileName, PATHINFO_FILENAME);
+        $uniqueName = $baseName . '_' . time() . '_' . uniqid() . '.' . $fileExt;
+        $uploadPath = __DIR__ . '/../../public/media/' . $uniqueName;
+        $webPath = '/media/' . $uniqueName;
+
+        // Move file
+        if (!move_uploaded_file($fileTmp, $uploadPath)) {
+            throw new \Exception('Failed to move uploaded file');
+        }
+
+        // Get duration for video/audio (requires ffprobe)
+        $durationSec = null;
+        if ($fileType === 'VIDEO' || $fileType === 'AUDIO') {
+            $durationSec = $this->getMediaDuration($uploadPath);
+        }
+
+        // Save to database
+        $mediaId = $this->mediaLibrary->create([
+            'file_name' => $fileName,
+            'file_path' => $webPath,
+            'file_type' => $fileType,
+            'file_size' => $fileSize,
+            'duration_sec' => $durationSec
+        ]);
+
+        return [
+            'id' => $mediaId,
+            'file_name' => $fileName,
+            'file_path' => $webPath,
+            'file_type' => $fileType,
+            'file_size' => $fileSize,
+            'duration_sec' => $durationSec
+        ];
     }
 
     private function uploadErrorMessage($errorCode) {

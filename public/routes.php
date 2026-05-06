@@ -12,6 +12,7 @@ $router->add('/'                        , 'Controller', 'index');
 // === API Talenti ===
 $router->add('/api/talenti'             , 'TalentoController', 'list');
 $router->add('/api/talento'              , 'TalentoController', 'show');
+$router->add('/api/talento/update'        , 'TalentoController', 'update');
 $router->add('/api/talento/reorder'      , 'TalentoController', 'reorder');
 $router->add('/api/talenti/aggiungi'    , 'ApiController', 'addTalento');
 $router->add('/api/talenti/elimina'     , 'ApiController', 'deleteTalento');
@@ -40,15 +41,6 @@ $router->add('/api/screens/create'       , 'ScreenController', 'create');
 $router->add('/api/screens/update'       , 'ScreenController', 'update');
 $router->add('/api/screens/delete'       , 'ScreenController', 'delete');
 
-// === API Queue ===
-$router->add('/api/queue'                , 'QueueController', 'index');
-$router->add('/api/queue/show'           , 'QueueController', 'show');
-$router->add('/api/queue/add'            , 'QueueController', 'add');
-$router->add('/api/queue/status'         , 'QueueController', 'updateStatus');
-$router->add('/api/queue/reorder'        , 'QueueController', 'reorder');
-$router->add('/api/queue/remove'         , 'QueueController', 'remove');
-$router->add('/api/queue/playing'       , 'QueueController', 'playing');
-$router->add('/api/queue/next'           , 'QueueController', 'next');
 
 // === API Notes ===
 $router->add('/api/notes'                , 'NoteController', 'index');

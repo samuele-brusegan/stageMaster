@@ -47,7 +47,7 @@ abstract class TestCase extends BaseTestCase
     private function cleanDatabase(): void
     {
         // Drop all tables to ensure clean state
-        $tables = ['transizioni', 'note_tecniche', 'media_queue', 'screens', 'player_state', 'media_performance', 'talenti', 'media'];
+        $tables = ['transizioni', 'note_tecniche', 'screens', 'player_state', 'media_performance', 'talenti', 'media'];
         
         foreach ($tables as $table) {
             try {

@@ -28,7 +28,6 @@ require_once BASE_PATH . '/app/Models/Talento.php';
 require_once BASE_PATH . '/app/Models/Media.php';
 require_once BASE_PATH . '/app/Models/PlayerState.php';
 require_once BASE_PATH . '/app/Models/Screen.php';
-require_once BASE_PATH . '/app/Models/MediaQueue.php';
 require_once BASE_PATH . '/app/Models/NoteTecniche.php';
 require_once BASE_PATH . '/app/Models/Transizione.php';
 require_once BASE_PATH . '/app/Models/MediaLibrary.php';

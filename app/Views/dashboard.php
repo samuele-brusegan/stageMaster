@@ -116,16 +116,6 @@
                 <!-- Loaded via JS -->
             </div>
 
-            <!-- Queue Section -->
-            <div class="border-t border-slate-700/50">
-                <div class="p-3 border-b border-slate-700/50 flex justify-between items-center">
-                    <h3 class="text-sm font-bold text-purple-400">Coda Esecuzione</h3>
-                    <span id="queue-count" class="text-xs bg-purple-500/20 text-purple-400 px-2 py-0.5 rounded">0</span>
-                </div>
-                <div id="queue-list" class="flex-1 overflow-y-auto p-3 space-y-2 max-h-48">
-                    <!-- Queue items loaded via JS -->
-                </div>
-            </div>
         </aside>
 
         <!-- Center Column - Timeline & Schermi (flex-1) -->
@@ -200,107 +190,34 @@
                     </select>
                 </div>
                 <div class="flex gap-1">
-                    <button onclick="sendPlaybackCommand('play')" class="flex-1 p-2 bg-green-600 hover:bg-green-500 rounded font-bold text-xs">PLAY</button>
-                    <button onclick="sendPlaybackCommand('pause')" class="flex-1 p-2 bg-yellow-600 hover:bg-yellow-500 rounded font-bold text-xs">PAUSE</button>
-                    <button onclick="sendPlaybackCommand('stop')" class="flex-1 p-2 bg-red-600 hover:bg-red-500 rounded font-bold text-xs">STOP</button>
+                    <button onclick="sendPlaybackCommand('play')" class="flex-1 p-2 bg-green-600 hover:bg-green-500 rounded font-bold text-xs flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M8 5v14l11-7z"/>
+                        </svg>
+                        PLAY
+                    </button>
+                    <button onclick="sendPlaybackCommand('pause')" class="flex-1 p-2 bg-yellow-600 hover:bg-yellow-500 rounded font-bold text-xs flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 4h4v16H6V4zm8 0h4v16h-4V4z"/>
+                        </svg>
+                        PAUSE
+                    </button>
+                    <button onclick="sendPlaybackCommand('stop')" class="flex-1 p-2 bg-red-600 hover:bg-red-500 rounded font-bold text-xs flex items-center justify-center gap-1">
+                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M6 6h12v12H6z"/>
+                        </svg>
+                        STOP
+                    </button>
                 </div>
             </div>
 
-            <!-- Gestore Audio/Video -->
-            <div class="flex-1 overflow-y-auto p-3 space-y-3">
-                <div class="glass glass-purple rounded-lg p-3">
-                    <h3 class="text-xs font-bold mb-2 text-purple-400">Gestore Audio/Video</h3>
-
-                    <!-- VIDEO Section -->
-                    <div class="mb-3">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-[10px] font-bold bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded">VIDEO</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">Start</label>
-                                <input type="text" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" placeholder="00:00:00">
-                            </div>
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">End</label>
-                                <input type="text" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" placeholder="00:00:00">
-                            </div>
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">Screen</label>
-                                <select class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
-                                    <option>Screen 1</option>
-                                    <option>Screen 2</option>
-                                    <option>Screen 3</option>
-                                    <option>Screen 4</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">Dissolvenza</label>
-                                <select class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
-                                    <option>Fade Black</option>
-                                    <option>Crossfade</option>
-                                    <option>Cut</option>
-                                </select>
-                            </div>
-                            <div class="col-span-2">
-                                <label class="text-slate-500 block mb-0.5">Offset (sec)</label>
-                                <input type="number" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" placeholder="0">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AUDIO Section -->
-                    <div class="mb-3">
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-[10px] font-bold bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded">AUDIO</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">Start</label>
-                                <input type="text" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" placeholder="00:00:00">
-                            </div>
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">End</label>
-                                <input type="text" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" placeholder="00:00:00">
-                            </div>
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">Duration</label>
-                                <input type="text" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" placeholder="00:00:00">
-                            </div>
-                            <div>
-                                <label class="text-slate-500 block mb-1">Tipo Dissolvenza</label>
-                                <select class="w-full bg-slate-800 border border-slate-700 rounded px-2 py-1">
-                                    <option>Fade In/Out</option>
-                                    <option>Crossfade</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- FOTO Section -->
-                    <div>
-                        <div class="flex items-center gap-2 mb-1">
-                            <span class="text-[10px] font-bold bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">FOTO</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-1.5 text-[10px]">
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">Duration</label>
-                                <input type="text" class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5" placeholder="00:00:00">
-                            </div>
-                            <div>
-                                <label class="text-slate-500 block mb-0.5">Dissolvenza</label>
-                                <select class="w-full bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5">
-                                    <option>Fade</option>
-                                    <option>Crossfade</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Note Tecniche -->
                 <div class="glass glass-red rounded-lg p-3">
-                    <h3 class="text-xs font-bold mb-2 text-red-400">Note Tecniche</h3>
+                    <div class="flex items-center justify-between mb-2">
+                        <h3 class="text-xs font-bold text-red-400">Note Tecniche</h3>
+                        <span id="note-slot-name" class="text-xs text-slate-400 truncate max-w-[120px]">Nessuno slot selezionato</span>
+                    </div>
 
                     <div class="space-y-2 text-[10px]">
                         <div>
@@ -378,17 +295,6 @@
             }
         }
 
-        async function fetchQueue() {
-            try {
-                const response = await fetch('/api/queue');
-                const result = await response.json();
-                if (result.status === 'ok') {
-                    renderQueue(result.data);
-                }
-            } catch (error) {
-                console.error("Dashboard: Errore nel recupero coda:", error);
-            }
-        }
 
         async function fetchScreens() {
             try {
@@ -495,6 +401,9 @@
             if (options.logMessage) log(options.logMessage);
             fetchNotes(slotId);
             loadTimeline(slotId, { force: true, silent: Boolean(options.silent && !changed) });
+            
+            // Update note tecniche slot name
+            updateNoteSlotName(slotId);
         }
 
         async function startSlot(slotId) {
@@ -765,33 +674,6 @@
             log(`Timeline aperta per slot ${slotId}`);
         }
 
-        function renderQueue(queue) {
-            const container = document.getElementById('queue-list');
-            const countEl = document.getElementById('queue-count');
-            container.innerHTML = '';
-            countEl.textContent = queue.length;
-
-            queue.forEach((item, index) => {
-                const queueItem = document.createElement('div');
-                const statusColor = item.stato === 'playing' ? 'text-green-400' :
-                                   item.stato === 'completed' ? 'text-slate-500' : 'text-blue-400';
-                const statusBg = item.stato === 'playing' ? 'bg-green-500/10 border-green-500/30' :
-                                  item.stato === 'completed' ? 'bg-slate-700/50 border-slate-600' : 'bg-blue-500/10 border-blue-500/30';
-
-                queueItem.className = `p-2 rounded border ${statusBg} text-xs flex justify-between items-center gap-2`;
-                queueItem.innerHTML = `
-                    <div class="flex items-center gap-2 flex-1 min-w-0">
-                        <span class="text-slate-500 font-mono text-[10px]">#${index + 1}</span>
-                        <span class="${statusColor} font-medium truncate">${item.talento_nome || 'Media ' + (index + 1)}</span>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        ${item.created_at ? `<span class="text-slate-600 text-[10px]">${new Date(item.created_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>` : ''}
-                        <span class="text-[10px] uppercase ${statusColor} px-1.5 py-0.5 rounded bg-slate-800">${item.stato}</span>
-                    </div>
-                `;
-                container.appendChild(queueItem);
-            });
-        }
 
         function renderScreens(screens) {
             const container = document.getElementById('screens-grid');
@@ -1163,7 +1045,6 @@
 
         // Caricamento iniziale
         fetchSetlist();
-        fetchQueue();
         fetchScreens();
         setInterval(updateSlotClock, 100);
         setInterval(() => {
@@ -1210,6 +1091,21 @@
             log(`Finestra ${type} aperta.`);
         }
 
+        function updateNoteSlotName(slotId) {
+            const slotNameElement = document.getElementById('note-slot-name');
+            if (!slotNameElement) return;
+            
+            if (!slotId) {
+                slotNameElement.textContent = 'Nessuno slot selezionato';
+                return;
+            }
+            
+            const slot = window.currentTalenti?.find(t => String(t.id) === String(slotId));
+            if (slot) {
+                slotNameElement.textContent = slot.nome;
+            }
+        }
+
         function log(msg) {
             console.log(`Dashboard: ${msg}`);
             const time = new Date().toLocaleTimeString();
@@ -1254,9 +1150,6 @@
                 if (activeSlot.slotId) {
                     activateSlot(activeSlot.slotId, { silent: true, publish: false });
                 }
-            } else if (e.key === 'queue_state') {
-                const queue = JSON.parse(e.newValue);
-                renderQueue(queue);
             } else if (e.key === 'timeline_updated' && e.newValue) {
                 const update = JSON.parse(e.newValue);
                 if (currentSlotId && String(update.slotId) === String(currentSlotId)) {

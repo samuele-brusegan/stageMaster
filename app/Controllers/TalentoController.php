@@ -32,6 +32,25 @@ class TalentoController extends ApiController {
     }
 
     /**
+     * API: Update talent information
+     */
+    public function update() {
+        $id = $_GET['id'] ?? null;
+        if (!$id) $this->error("ID is required");
+
+        $data = $this->getJsonInput();
+        $this->validate($data, [
+            'nome' => 'required'
+        ]);
+
+        if ($this->talentoModel->update($id, $data)) {
+            $this->json(['status' => 'ok', 'message' => 'Slot aggiornato con successo']);
+        } else {
+            $this->error("Failed to update slot", 500);
+        }
+    }
+
+    /**
      * API: Reorder setlist (Drag & Drop)
      */
     public function reorder() {

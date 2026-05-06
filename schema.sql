@@ -52,18 +52,6 @@ CREATE TABLE player_state (
     FOREIGN KEY (current_media_id) REFERENCES media_performance(id) ON DELETE SET NULL
 );
 
--- Tabella Media Queue - Sistema di coda
-CREATE TABLE media_queue (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    talento_id INT,
-    media_id INT,
-    ordine_coda INT NOT NULL,
-    stato ENUM('pending', 'playing', 'completed', 'skipped') DEFAULT 'pending',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (talento_id) REFERENCES talenti(id) ON DELETE CASCADE,
-    FOREIGN KEY (media_id) REFERENCES media_performance(id) ON DELETE CASCADE
-);
 
 -- Tabella Media - Libreria file disponibili
 CREATE TABLE media (

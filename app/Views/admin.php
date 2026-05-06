@@ -205,10 +205,10 @@
                     </h2>
                     <form id="upload-form" class="space-y-4">
                         <div class="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-purple-500 transition-colors">
-                            <input type="file" id="media-file" accept="image/*,video/*,audio/*" class="hidden" onchange="handleFileSelect(this)">
+                            <input type="file" id="media-file" accept="image/*,video/*,audio/*" multiple class="hidden" onchange="handleFileSelect(this)">
                             <label for="media-file" class="cursor-pointer">
                                 <svg class="w-12 h-12 mx-auto text-slate-500 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                <p class="text-slate-400 font-semibold">Clicca per selezionare un file</p>
+                                <p class="text-slate-400 font-semibold">Clicca per selezionare file (multipli supportati)</p>
                                 <p class="text-slate-600 text-sm mt-2">Formati supportati: JPG, PNG, GIF, MP4, WEBM, MP3, WAV</p>
                             </label>
                             <div id="file-info" class="mt-4 hidden">
@@ -590,9 +590,16 @@
                         <input type="checkbox" class="mr-3" ${selectedItems.slots.has(String(slot.id)) ? 'checked' : ''} onchange="setSelected('slots', ${slot.id}, this.checked)">
                         ${index + 1}
                     </td>
-                    <td class="py-4 font-bold">${slot.nome}</td>
-                    <td class="py-4"><span class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30">${slot.categoria}</span></td>
+                    <td class="py-4 font-bold">
+                        <span onclick="editSlot(${slot.id}, '${slot.nome}', '${slot.categoria}')" class="cursor-pointer hover:text-blue-400 transition-colors">${slot.nome}</span>
+                    </td>
+                    <td class="py-4">
+                        <span onclick="editSlot(${slot.id}, '${slot.nome}', '${slot.categoria}')" class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-pointer hover:bg-blue-500/30 transition-colors">${slot.categoria}</span>
+                    </td>
                     <td class="py-4 text-right pr-4 flex justify-end gap-2">
+                        <button onclick="editSlot(${slot.id}, '${slot.nome}', '${slot.categoria}')" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors" title="Modifica slot">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l4 4"></path></svg>
+                        </button>
                         <button onclick="moveSlot(${index}, 'up')" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors" ${index === 0 ? 'disabled opacity-20' : ''}>
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"></path></svg>
                         </button>
@@ -710,6 +717,99 @@
             selectedMedia: null,
             duplicate: false
         };
+
+        function editSlot(id, currentName, currentCategory) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-slate-800 rounded-xl p-6 w-96 max-w-full mx-4">
+                    <h3 class="text-xl font-bold mb-4 text-blue-400">Modifica Slot</h3>
+                    <form id="edit-slot-form" class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Nome Slot</label>
+                            <input type="text" id="edit-slot-name" value="${escapeHtml(currentName)}" 
+                                   class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" 
+                                   required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Categoria</label>
+                            <select id="edit-slot-category" 
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="CANTO" ${currentCategory === 'CANTO' ? 'selected' : ''}>Canto</option>
+                                <option value="BALLO" ${currentCategory === 'BALLO' ? 'selected' : ''}>Ballo</option>
+                                <option value="RECITAZIONE" ${currentCategory === 'RECITAZIONE' ? 'selected' : ''}>Recitazione</option>
+                                <option value="MAGIA" ${currentCategory === 'MAGIA' ? 'selected' : ''}>Magia</option>
+                                <option value="ALTRO" ${currentCategory === 'ALTRO' ? 'selected' : ''}>Altro</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end gap-3 pt-4">
+                            <button type="button" onclick="closeEditSlotModal()" 
+                                    class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-white transition-colors">
+                                Annulla
+                            </button>
+                            <button type="submit" 
+                                    class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition-colors">
+                                Salva
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Handle form submission
+            document.getElementById('edit-slot-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const formData = {
+                    nome: document.getElementById('edit-slot-name').value,
+                    categoria: document.getElementById('edit-slot-category').value
+                };
+
+                let a = null;
+                
+                try {
+                    const response = await fetch(`/api/talento/update?id=${id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(formData)
+                    });
+                    const resultText = await response.text();
+                    let result = undefined;
+                    try {
+                        result = JSON.parse(resultText);
+                    } catch (e) {
+                        console.error('Failed to parse JSON:', e);
+                        console.error(resultText);
+                        showToast('Errore nel parsing della risposta', 'error');
+                        return;
+                    }
+                    //const result = await response.json();
+                    console.log(result);
+                    
+                    if (result.status === 'ok') {
+                        showToast('Slot aggiornato con successo', 'success');
+                        closeEditSlotModal();
+                        fetchTalenti(); // Refresh the list
+                    } else {
+                        showToast(result.message || 'Errore nell\'aggiornamento', 'error');
+                    }
+                } catch (error) {
+                    
+                    console.error('Edit slot error:', error);
+                    //if (error.)
+                    showToast('Errore di connessione', 'error');
+                }
+            });
+        }
+        
+        function closeEditSlotModal() {
+            const modal = document.querySelector('.fixed.inset-0');
+            if (modal) {
+                modal.remove();
+            }
+        }
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -891,15 +991,121 @@
                 return null;
             }
 
-            const formData = new FormData();
-            formData.append('file', input.files[0]);
-            const response = await fetch('/api/media-library/upload', { method: 'POST', body: formData });
-            const result = await response.json();
-            if (result.status !== 'ok') {
-                showToast(result.message || 'Errore nel caricamento media', 'error');
+            const file = input.files[0];
+            
+            // Client-side validation
+            const maxSize = 200 * 1024 * 1024; // 200MB
+            if (file.size > maxSize) {
+                showToast(`File troppo grande (${Math.round(file.size / 1024 / 1024)}MB). Limite massimo: 200MB`, 'error');
                 return null;
             }
-            return result.data;
+
+            const supportedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 
+                                  'video/mp4', 'video/webm', 'video/ogg', 'video/quicktime',
+                                  'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/flac'];
+            
+            if (!supportedTypes.includes(file.type)) {
+                const extension = file.name.split('.').pop().toLowerCase();
+                const supportedExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'mp4', 'webm', 'ogg', 'mov', 'mp3', 'wav', 'flac'];
+                
+                if (!supportedExtensions.includes(extension)) {
+                    showToast(`Formato non supportato: .${extension}. Usa: JPG, PNG, GIF, MP4, MP3, etc.`, 'error');
+                    return null;
+                }
+            }
+
+            // Show loading state
+            const uploadBtn = document.querySelector('#wizard-upload-panel button') || 
+                             document.querySelector('#wizard-save-btn');
+            const originalText = uploadBtn?.textContent;
+            if (uploadBtn) {
+                uploadBtn.disabled = true;
+                uploadBtn.textContent = 'Caricamento...';
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const response = await fetch('/api/media-library/upload', { 
+                    method: 'POST', 
+                    body: formData,
+                    timeout: 30000 // 30 second timeout
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    // Handle HTTP errors
+                    if (response.status === 413) {
+                        showToast('File troppo grande. Limite massimo: 200MB', 'error');
+                    } else if (response.status === 400) {
+                        showToast(result.message || 'Richiesta non valida', 'error');
+                    } else if (response.status === 500) {
+                        showToast('Errore del server durante il caricamento', 'error');
+                    } else {
+                        showToast(`Errore HTTP ${response.status}: ${result.message || 'Errore sconosciuto'}`, 'error');
+                    }
+                    return null;
+                }
+
+                if (result.status !== 'ok') {
+                    // Handle application-level errors
+                    if (result.failed_files && Array.isArray(result.failed_files)) {
+                        // Multiple file upload errors
+                        const errorMessages = result.failed_files.map(f => `${f.file}: ${f.error}`).join('\n');
+                        showToast(`Errori nel caricamento:\n${errorMessages}`, 'error');
+                    } else {
+                        // Single file error
+                        const errorMessage = result.message || 'Errore nel caricamento media';
+                        
+                        // Provide more specific error messages based on common issues
+                        if (errorMessage.includes('Unsupported file type')) {
+                            showToast('Tipo di file non supportato. Usa formati: JPG, PNG, MP4, MP3, etc.', 'error');
+                        } else if (errorMessage.includes('too grande') || errorMessage.includes('grande')) {
+                            showToast('File troppo grande. Limite massimo: 200MB', 'error');
+                        } else if (errorMessage.includes('Failed to move')) {
+                            showToast('Errore nel salvataggio del file. Controlla i permessi della cartella media/', 'error');
+                        } else if (errorMessage.includes('network') || errorMessage.includes('Connection')) {
+                            showToast('Errore di connessione. Riprova più tardi.', 'error');
+                        } else {
+                            showToast(`Errore: ${errorMessage}`, 'error');
+                        }
+                    }
+                    return null;
+                }
+
+                // Success
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = originalText;
+                }
+
+                return result.data;
+
+            } catch (error) {
+                // Handle network/JavaScript errors
+                console.error('Upload error:', error);
+                
+                let errorMessage = 'Errore nel caricamento';
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMessage = 'Errore di rete. Controlla la connessione internet.';
+                } else if (error.name === 'AbortError') {
+                    errorMessage = 'Caricamento annullato o timeout.';
+                } else if (error.message) {
+                    errorMessage = `Errore: ${error.message}`;
+                }
+                
+                showToast(errorMessage, 'error');
+                return null;
+                
+            } finally {
+                // Always restore button state
+                if (uploadBtn) {
+                    uploadBtn.disabled = false;
+                    uploadBtn.textContent = originalText;
+                }
+            }
         }
 
         async function updateWizardSummary() {
@@ -917,7 +1123,7 @@
                 ${summaryCard('Media', media.file_name)}
                 ${summaryCard('Schermo', screen ? screen.nome : '')}
                 ${summaryCard('Tipo', document.getElementById('wizard-type-select').value)}
-                ${summaryCard('Coda', 'Aggiunto automaticamente come pending')}
+                ${summaryCard('Timeline', 'Aggiunto alla timeline dello slot')}
             `;
         }
 
@@ -1301,8 +1507,12 @@
         function handleFileSelect(input) {
             const fileInfo = document.getElementById('file-info');
             const fileName = document.getElementById('selected-file-name');
-            if (input.files && input.files[0]) {
-                fileName.textContent = input.files[0].name;
+            if (input.files && input.files.length > 0) {
+                if (input.files.length === 1) {
+                    fileName.textContent = input.files[0].name;
+                } else {
+                    fileName.textContent = `${input.files.length} file selezionati`;
+                }
                 fileInfo.classList.remove('hidden');
             }
         }
@@ -1315,31 +1525,59 @@
         document.getElementById('upload-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const fileInput = document.getElementById('media-file');
-            if (!fileInput.files || !fileInput.files[0]) {
-                showToast('Seleziona un file da caricare', 'error');
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showToast('Seleziona almeno un file da caricare', 'error');
                 return;
             }
 
-            const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
+            const uploadedFiles = [];
+            const failedFiles = [];
+            
+            // Show progress
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.textContent;
+            submitBtn.disabled = true;
+            submitBtn.textContent = `Caricamento ${fileInput.files.length} file...`;
 
-            try {
-                const response = await fetch('/api/media-library/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.status === 'ok') {
-                    fetchMediaLibrary();
-                    resetUploadForm();
-                    showToast('Media caricato con successo', 'success');
-                } else {
-                    showToast('Errore nel caricamento: ' + result.message, 'error');
+            for (let i = 0; i < fileInput.files.length; i++) {
+                const file = fileInput.files[i];
+                const formData = new FormData();
+                formData.append('file', file);
+
+                try {
+                    const response = await fetch('/api/media-library/upload', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    const result = await response.json();
+                    
+                    if (result.status === 'ok') {
+                        uploadedFiles.push(result.data);
+                    } else {
+                        failedFiles.push({ file: file.name, error: result.message });
+                    }
+                } catch (error) {
+                    failedFiles.push({ file: file.name, error: 'Errore di rete' });
                 }
-            } catch (error) {
-                console.error("Admin: Errore nel caricamento media:", error);
-                showToast('Errore nel caricamento media', 'error');
             }
+
+            // Reset button
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+
+            // Show results
+            if (uploadedFiles.length > 0) {
+                showToast(`${uploadedFiles.length} file caricati con successo`, 'success');
+            }
+            
+            if (failedFiles.length > 0) {
+                const errorMessages = failedFiles.map(f => `${f.file}: ${f.error}`).join('\n');
+                showToast(`${failedFiles.length} file falliti:\n${errorMessages}`, 'error');
+            }
+
+            // Reset and refresh
+            resetUploadForm();
+            fetchMediaLibrary();
         });
 
         async function fetchMediaLibrary() {
