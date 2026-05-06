@@ -28,11 +28,11 @@ Talent Show Management System - A comprehensive web application for managing tal
 
 ## Prerequisites
 
+- Docker & Docker Compose (for containerized setup) How to install: [click me](https://docs.docker.com/get-docker/)
 - PHP 8.2 or higher
 - MySQL 8.0
 - Composer
 - Node.js 20+ (for JavaScript testing)
-- Docker & Docker Compose (optional but recommended)
 
 ## Installation
 
