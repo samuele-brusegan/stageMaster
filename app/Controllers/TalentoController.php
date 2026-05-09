@@ -46,12 +46,42 @@ class TalentoController extends ApiController
         }
 
         $data = $this->getJsonInput();
-        $this->validate($data, ['nome' => 'required']);
+        if (array_key_exists('nome', $data) && trim((string)$data['nome']) === '') {
+            $this->error('Nome non può essere vuoto');
+        }
 
         if ($this->talentoModel->update((int)$id, $data)) {
             $this->json(['status' => 'ok', 'message' => 'Slot aggiornato con successo']);
         }
         $this->error('Failed to update slot', 500);
+    }
+
+    /** API: list slots filtered by folder. ?folder_id=null|0|N */
+    public function byFolder(): void
+    {
+        $folderId = $_GET['folder_id'] ?? null;
+        $filter = null;
+        if ($folderId !== null && $folderId !== '') {
+            $filter = $folderId === 'null' ? 0 : (int)$folderId;
+        }
+        $this->json(['status' => 'ok', 'data' => $this->talentoModel->getScaletta($filter)]);
+    }
+
+    /** API: move a slot to another folder. POST { id, folder_id } */
+    public function moveToFolder(): void
+    {
+        $data = $this->getJsonInput();
+        $id   = $data['id'] ?? ($_GET['id'] ?? null);
+        if (!$id) {
+            $this->error('ID is required');
+        }
+        $folder = $data['folder_id'] ?? null;
+        $folderId = ($folder === null || $folder === '' || $folder === 'null') ? null : (int)$folder;
+
+        if ($this->talentoModel->moveToFolder((int)$id, $folderId)) {
+            $this->json(['status' => 'ok', 'message' => 'Slot spostato']);
+        }
+        $this->error('Spostamento fallito', 500);
     }
 
     /** API: Reorder setlist (Drag & Drop) */

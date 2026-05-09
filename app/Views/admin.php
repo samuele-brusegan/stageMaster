@@ -37,6 +37,10 @@
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                     Slot
                 </button>
+                <button onclick="showTab('cartelle')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 font-semibold text-sm card-hover" data-tab="cartelle" data-tooltip="Organizza gli slot in cartelle (atti / scene)">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path></svg>
+                    Cartelle
+                </button>
                 <button onclick="showTab('media')" class="tab-btn px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 font-semibold text-sm card-hover" data-tab="media" data-tooltip="Associa media ai talenti">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 4v16M17 4v16M3 8h4m10 0h4M3 12h18M3 16h4m10 0h4M4 20h16a1 1 0 001-1V5a1 1 0 00-1-1H4a1 1 0 00-1 1v14a1 1 0 001 1z"></path></svg>
                     Media
@@ -63,7 +67,7 @@
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"></path></svg>
                         Aggiungi Nuovo Slot
                     </h2>
-                    <form id="talent-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form id="talent-form" class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div class="space-y-2">
                             <label class="text-xs font-bold uppercase text-slate-500">Nome e Cognome</label>
                             <input type="text" name="nome" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors">
@@ -78,7 +82,13 @@
                                 <option value="ALTRO">Altro</option>
                             </select>
                         </div>
-                        <div class="md:col-span-2 flex justify-end">
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold uppercase text-slate-500">Cartella</label>
+                            <select name="folder_id" id="new-slot-folder-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors">
+                                <option value="">Nessuna (root)</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-3 flex justify-end">
                             <button type="submit" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/20">
                                 Salva Slot
                             </button>
@@ -88,10 +98,19 @@
 
                 <!-- Slot Manager -->
                 <section class="glass glass-purple rounded-2xl p-6">
-                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2 text-purple-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
-                        Slot Attuali
-                    </h2>
+                    <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
+                        <h2 class="text-xl font-bold flex items-center gap-2 text-purple-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                            Slot Attuali
+                        </h2>
+                        <div class="flex items-center gap-2 text-xs">
+                            <label class="font-bold uppercase text-slate-500">Filtra per cartella</label>
+                            <select id="slot-folder-filter" onchange="onSlotFolderFilterChange()" class="bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 focus:outline-none focus:border-purple-500 transition-colors">
+                                <option value="">Tutti</option>
+                                <option value="null">Senza cartella</option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead>
@@ -99,6 +118,7 @@
                                     <th class="pb-4 pl-4">Pos</th>
                                     <th class="pb-4">Slot</th>
                                     <th class="pb-4">Categoria</th>
+                                    <th class="pb-4">Cartella</th>
                                     <th class="pb-4 text-right pr-4">Azioni</th>
                                 </tr>
                             </thead>
@@ -106,6 +126,46 @@
                                 <!-- Loaded via JS -->
                             </tbody>
                         </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Cartelle Tab -->
+            <div id="tab-cartelle" class="tab-content space-y-6 hidden">
+                <section class="glass glass-blue rounded-2xl p-6">
+                    <h2 class="text-xl font-bold mb-6 flex items-center gap-2 text-blue-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"></path></svg>
+                        Crea cartella
+                    </h2>
+                    <form id="folder-form" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="space-y-2 md:col-span-2">
+                            <label class="text-xs font-bold uppercase text-slate-500">Nome cartella</label>
+                            <input type="text" name="nome" required placeholder="Es. Atto 1, Scena finale, Pausa…" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors">
+                        </div>
+                        <div class="space-y-2">
+                            <label class="text-xs font-bold uppercase text-slate-500">Cartella padre</label>
+                            <select name="parent_id" id="folder-parent-select" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 focus:outline-none focus:border-blue-500 transition-colors">
+                                <option value="">Nessuna (root)</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-3 flex justify-end">
+                            <button type="submit" class="px-8 py-3 bg-blue-600 hover:bg-blue-500 rounded-xl font-bold transition-all shadow-lg shadow-blue-900/20">
+                                Crea cartella
+                            </button>
+                        </div>
+                    </form>
+                </section>
+
+                <section class="glass glass-purple rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-6">
+                        <h2 class="text-xl font-bold flex items-center gap-2 text-purple-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"></path></svg>
+                            Organizzazione
+                        </h2>
+                        <button type="button" onclick="fetchFolderTree()" class="text-xs px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg font-semibold">Ricarica</button>
+                    </div>
+                    <div id="folder-tree" class="space-y-2">
+                        <p class="text-slate-500 text-sm">Caricamento…</p>
                     </div>
                 </section>
             </div>
@@ -409,10 +469,15 @@
                 btn.classList.remove('bg-blue-600', 'text-white');
                 btn.classList.add('bg-slate-800');
             });
-            
+
             document.getElementById(`tab-${tabName}`).classList.remove('hidden');
             document.querySelector(`[data-tab="${tabName}"]`).classList.remove('bg-slate-800');
             document.querySelector(`[data-tab="${tabName}"]`).classList.add('bg-blue-600', 'text-white');
+
+            // Lazy refresh side data when entering certain tabs.
+            if (tabName === 'cartelle') {
+                fetchFolders().then(fetchFolderTree);
+            }
         }
 
         let confirmResolver = null;
@@ -562,10 +627,70 @@
 
         // Slot
         const API_BASE = '/api/talenti';
+        window.foldersFlat = [];
+        window.foldersById = new Map();
+        window.slotFolderFilter = '';
+
+        function buildFolderLabel(folder) {
+            // walk up the parent chain to build a path
+            const parts = [folder.nome];
+            let current = folder;
+            while (current.parent_id) {
+                const parent = window.foldersById.get(Number(current.parent_id));
+                if (!parent) break;
+                parts.unshift(parent.nome);
+                current = parent;
+            }
+            return parts.join(' / ');
+        }
+
+        async function fetchFolders() {
+            try {
+                const response = await fetch('/api/folders');
+                const result = await response.json();
+                if (result.status === 'ok') {
+                    window.foldersFlat = result.data;
+                    window.foldersById = new Map(result.data.map(f => [Number(f.id), f]));
+                    renderFolderSelectOptions();
+                }
+            } catch (error) {
+                console.error('Admin: Errore nel recupero cartelle:', error);
+            }
+        }
+
+        function renderFolderSelectOptions() {
+            const targets = [
+                { id: 'slot-folder-filter', firstOptions: '<option value="">Tutti</option><option value="null">Senza cartella</option>' },
+                { id: 'new-slot-folder-select', firstOptions: '<option value="">Nessuna (root)</option>' },
+                { id: 'folder-parent-select',   firstOptions: '<option value="">Nessuna (root)</option>' },
+            ];
+            const sorted = [...window.foldersFlat].sort((a, b) => {
+                const la = buildFolderLabel(a).toLowerCase();
+                const lb = buildFolderLabel(b).toLowerCase();
+                return la.localeCompare(lb);
+            });
+            targets.forEach(({ id, firstOptions }) => {
+                const select = document.getElementById(id);
+                if (!select) return;
+                const previous = select.value;
+                let html = firstOptions;
+                sorted.forEach(folder => {
+                    html += `<option value="${folder.id}">${escapeHtml(buildFolderLabel(folder))}</option>`;
+                });
+                select.innerHTML = html;
+                if (previous !== '' && [...select.options].some(o => o.value === previous)) {
+                    select.value = previous;
+                }
+            });
+        }
 
         async function fetchTalenti() {
             try {
-                const response = await fetch(API_BASE);
+                let url = API_BASE;
+                if (window.slotFolderFilter !== '') {
+                    url = `/api/talenti/by-folder?folder_id=${encodeURIComponent(window.slotFolderFilter)}`;
+                }
+                const response = await fetch(url);
                 const result = await response.json();
                 if (result.status === 'ok') {
                     renderSlotList(result.data);
@@ -574,6 +699,18 @@
             } catch (error) {
                 console.error("Admin: Errore nel recupero slot:", error);
             }
+        }
+
+        function onSlotFolderFilterChange() {
+            const select = document.getElementById('slot-folder-filter');
+            window.slotFolderFilter = select ? select.value : '';
+            fetchTalenti();
+        }
+
+        function folderLabelFor(folderId) {
+            if (folderId === null || folderId === undefined || folderId === '') return null;
+            const folder = window.foldersById.get(Number(folderId));
+            return folder ? buildFolderLabel(folder) : null;
         }
 
         function renderSlotList(slots) {
@@ -585,19 +722,26 @@
             slots.forEach((slot, index) => {
                 const row = document.createElement('tr');
                 row.className = 'group hover:bg-slate-800/30 transition-colors';
+                const folderLabel = folderLabelFor(slot.folder_id);
+                const folderCell = folderLabel
+                    ? `<span class="px-2 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-300 border border-purple-500/30">${escapeHtml(folderLabel)}</span>`
+                    : `<span class="text-[10px] text-slate-600">—</span>`;
                 row.innerHTML = `
                     <td class="py-4 pl-4 font-mono text-blue-400">
                         <input type="checkbox" class="mr-3" ${selectedItems.slots.has(String(slot.id)) ? 'checked' : ''} onchange="setSelected('slots', ${slot.id}, this.checked)">
                         ${index + 1}
                     </td>
                     <td class="py-4 font-bold">
-                        <span onclick="editSlot(${slot.id}, '${slot.nome}', '${slot.categoria}')" class="cursor-pointer hover:text-blue-400 transition-colors">${slot.nome}</span>
+                        <span onclick="editSlot(${slot.id}, ${JSON.stringify(slot.nome).replace(/"/g, '&quot;')}, ${JSON.stringify(slot.categoria || '').replace(/"/g, '&quot;')}, ${slot.folder_id === null ? 'null' : slot.folder_id})" class="cursor-pointer hover:text-blue-400 transition-colors">${escapeHtml(slot.nome)}</span>
                     </td>
                     <td class="py-4">
-                        <span onclick="editSlot(${slot.id}, '${slot.nome}', '${slot.categoria}')" class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30 cursor-pointer hover:bg-blue-500/30 transition-colors">${slot.categoria}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-400 border border-blue-500/30">${escapeHtml(slot.categoria || '')}</span>
+                    </td>
+                    <td class="py-4">
+                        ${folderCell}
                     </td>
                     <td class="py-4 text-right pr-4 flex justify-end gap-2">
-                        <button onclick="editSlot(${slot.id}, '${slot.nome}', '${slot.categoria}')" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors" title="Modifica slot">
+                        <button onclick="editSlot(${slot.id}, ${JSON.stringify(slot.nome).replace(/"/g, '&quot;')}, ${JSON.stringify(slot.categoria || '').replace(/"/g, '&quot;')}, ${slot.folder_id === null ? 'null' : slot.folder_id})" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors" title="Modifica slot">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l4 4"></path></svg>
                         </button>
                         <button onclick="moveSlot(${index}, 'up')" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors" ${index === 0 ? 'disabled opacity-20' : ''}>
@@ -718,7 +862,13 @@
             duplicate: false
         };
 
-        function editSlot(id, currentName, currentCategory) {
+        function editSlot(id, currentName, currentCategory, currentFolderId) {
+            const folderOptions = (window.foldersFlat || []).map(f => {
+                const selected = (currentFolderId !== null && currentFolderId !== undefined && Number(currentFolderId) === Number(f.id)) ? 'selected' : '';
+                return `<option value="${f.id}" ${selected}>${escapeHtml(buildFolderLabel(f))}</option>`;
+            }).join('');
+            const isUnfiled = currentFolderId === null || currentFolderId === undefined;
+
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 bg-black/50 flex items-center justify-center z-50';
             modal.innerHTML = `
@@ -727,13 +877,13 @@
                     <form id="edit-slot-form" class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-2">Nome Slot</label>
-                            <input type="text" id="edit-slot-name" value="${escapeHtml(currentName)}" 
-                                   class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500" 
+                            <input type="text" id="edit-slot-name" value="${escapeHtml(currentName)}"
+                                   class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
                                    required>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-300 mb-2">Categoria</label>
-                            <select id="edit-slot-category" 
+                            <select id="edit-slot-category"
                                     class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
                                 <option value="CANTO" ${currentCategory === 'CANTO' ? 'selected' : ''}>Canto</option>
                                 <option value="BALLO" ${currentCategory === 'BALLO' ? 'selected' : ''}>Ballo</option>
@@ -742,12 +892,20 @@
                                 <option value="ALTRO" ${currentCategory === 'ALTRO' ? 'selected' : ''}>Altro</option>
                             </select>
                         </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-2">Cartella</label>
+                            <select id="edit-slot-folder"
+                                    class="w-full bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                                <option value="" ${isUnfiled ? 'selected' : ''}>Nessuna (root)</option>
+                                ${folderOptions}
+                            </select>
+                        </div>
                         <div class="flex justify-end gap-3 pt-4">
-                            <button type="button" onclick="closeEditSlotModal()" 
+                            <button type="button" onclick="closeEditSlotModal()"
                                     class="px-4 py-2 bg-slate-600 hover:bg-slate-500 rounded-lg text-white transition-colors">
                                 Annulla
                             </button>
-                            <button type="submit" 
+                            <button type="submit"
                                     class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-lg text-white font-medium transition-colors">
                                 Salva
                             </button>
@@ -755,50 +913,34 @@
                     </form>
                 </div>
             `;
-            
+
             document.body.appendChild(modal);
-            
-            // Handle form submission
+
             document.getElementById('edit-slot-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                
+                const folderRaw = document.getElementById('edit-slot-folder').value;
                 const formData = {
                     nome: document.getElementById('edit-slot-name').value,
-                    categoria: document.getElementById('edit-slot-category').value
+                    categoria: document.getElementById('edit-slot-category').value,
+                    folder_id: folderRaw === '' ? null : Number(folderRaw),
                 };
 
-                let a = null;
-                
                 try {
                     const response = await fetch(`/api/talento/update?id=${id}`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(formData)
                     });
-                    const resultText = await response.text();
-                    let result = undefined;
-                    try {
-                        result = JSON.parse(resultText);
-                    } catch (e) {
-                        console.error('Failed to parse JSON:', e);
-                        console.error(resultText);
-                        showToast('Errore nel parsing della risposta', 'error');
-                        return;
-                    }
-                    //const result = await response.json();
-                    console.log(result);
-                    
+                    const result = await response.json();
                     if (result.status === 'ok') {
                         showToast('Slot aggiornato con successo', 'success');
                         closeEditSlotModal();
-                        fetchTalenti(); // Refresh the list
+                        fetchTalenti();
                     } else {
                         showToast(result.message || 'Errore nell\'aggiornamento', 'error');
                     }
                 } catch (error) {
-                    
                     console.error('Edit slot error:', error);
-                    //if (error.)
                     showToast('Errore di connessione', 'error');
                 }
             });
@@ -810,6 +952,198 @@
                 modal.remove();
             }
         }
+
+        // ============= Slot folders =============
+        async function fetchFolderTree() {
+            try {
+                const response = await fetch('/api/folders/tree');
+                const result = await response.json();
+                if (result.status === 'ok') {
+                    renderFolderTree(result.data);
+                }
+            } catch (error) {
+                console.error('Admin: Errore nel recupero tree cartelle:', error);
+            }
+        }
+
+        function renderFolderTree(tree) {
+            const container = document.getElementById('folder-tree');
+            if (!container) return;
+            const folders = tree.folders || [];
+            const unfiled = tree.unfiled || [];
+
+            if (folders.length === 0 && unfiled.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-sm">Nessuna cartella ancora. Creane una qui sopra.</p>';
+                return;
+            }
+
+            const renderNode = (folder, depth) => {
+                const slots = folder.slots || [];
+                const slotChips = slots.length === 0
+                    ? '<span class="text-[11px] text-slate-600">(nessuno slot)</span>'
+                    : slots.map(s => `<span class="px-2 py-0.5 rounded-md text-[11px] bg-blue-500/15 text-blue-300 border border-blue-500/30">${escapeHtml(s.nome)}</span>`).join(' ');
+                const indent = depth * 16;
+                let html = `
+                    <div class="folder-node rounded-xl border border-slate-800 bg-slate-900/40 p-3" style="margin-left:${indent}px">
+                        <div class="flex items-center justify-between gap-3 flex-wrap">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+                                <span class="font-semibold truncate">${escapeHtml(folder.nome)}</span>
+                                <span class="text-[10px] text-slate-500">#${folder.id}</span>
+                            </div>
+                            <div class="flex items-center gap-1">
+                                <button type="button" onclick="renameFolder(${folder.id})" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white" title="Rinomina">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                                <button type="button" onclick="moveFolder(${folder.id}, 'up')" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white" title="Sposta su">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7"/></svg>
+                                </button>
+                                <button type="button" onclick="moveFolder(${folder.id}, 'down')" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white" title="Sposta giù">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <button type="button" onclick="deleteFolder(${folder.id})" class="p-2 hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-400" title="Elimina">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2 flex flex-wrap gap-2">${slotChips}</div>
+                    </div>
+                `;
+                (folder.children || []).forEach(child => {
+                    html += renderNode(child, depth + 1);
+                });
+                return html;
+            };
+
+            let html = '';
+            folders.forEach(f => { html += renderNode(f, 0); });
+
+            if (unfiled.length > 0) {
+                const slotChips = unfiled.map(s => `<span class="px-2 py-0.5 rounded-md text-[11px] bg-slate-700/40 text-slate-200 border border-slate-600/40">${escapeHtml(s.nome)}</span>`).join(' ');
+                html += `
+                    <div class="rounded-xl border border-dashed border-slate-700 bg-slate-900/30 p-3 mt-4">
+                        <div class="text-xs uppercase font-bold text-slate-500 mb-2">Slot senza cartella</div>
+                        <div class="flex flex-wrap gap-2">${slotChips}</div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+        }
+
+        async function renameFolder(id) {
+            const current = window.foldersById.get(Number(id));
+            const next = window.prompt('Nuovo nome cartella:', current ? current.nome : '');
+            if (next === null) return;
+            const trimmed = next.trim();
+            if (trimmed === '') {
+                showToast('Nome cartella obbligatorio', 'error');
+                return;
+            }
+            try {
+                const response = await fetch(`/api/folders/update?id=${id}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ nome: trimmed })
+                });
+                const result = await response.json();
+                if (result.status === 'ok') {
+                    showToast('Cartella rinominata', 'success');
+                    await refreshFoldersAndSlots();
+                } else {
+                    showToast(result.message || 'Errore', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Errore di connessione', 'error');
+            }
+        }
+
+        async function deleteFolder(id) {
+            const confirmed = await showConfirm({
+                title: 'Elimina cartella',
+                message: 'La cartella e le sotto-cartelle saranno eliminate. Gli slot interni resteranno (senza cartella). Procedere?'
+            });
+            if (!confirmed) return;
+            try {
+                const response = await fetch(`/api/folders/delete?id=${id}`, { method: 'DELETE' });
+                const result = await response.json();
+                if (result.status === 'ok') {
+                    showToast('Cartella eliminata', 'success');
+                    await refreshFoldersAndSlots();
+                } else {
+                    showToast(result.message || 'Errore', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Errore di connessione', 'error');
+            }
+        }
+
+        async function moveFolder(id, direction) {
+            const folder = window.foldersById.get(Number(id));
+            if (!folder) return;
+            const parentId = folder.parent_id ?? null;
+            const siblings = window.foldersFlat
+                .filter(f => (f.parent_id ?? null) === parentId)
+                .sort((a, b) => Number(a.ordine) - Number(b.ordine));
+            const idx = siblings.findIndex(f => Number(f.id) === Number(id));
+            if (idx === -1) return;
+            if (direction === 'up' && idx > 0) {
+                [siblings[idx], siblings[idx - 1]] = [siblings[idx - 1], siblings[idx]];
+            } else if (direction === 'down' && idx < siblings.length - 1) {
+                [siblings[idx], siblings[idx + 1]] = [siblings[idx + 1], siblings[idx]];
+            } else {
+                return;
+            }
+            const orderedIds = siblings.map(f => Number(f.id));
+            try {
+                await fetch('/api/folders/reorder', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ parent_id: parentId, ordered_ids: orderedIds })
+                });
+                await refreshFoldersAndSlots();
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function refreshFoldersAndSlots() {
+            await fetchFolders();
+            await fetchFolderTree();
+            await fetchTalenti();
+        }
+
+        // Folder creation form
+        document.addEventListener('DOMContentLoaded', () => {
+            const folderForm = document.getElementById('folder-form');
+            if (folderForm) {
+                folderForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    const fd = new FormData(e.target);
+                    const payload = Object.fromEntries(fd.entries());
+                    if (!payload.parent_id) payload.parent_id = null;
+                    try {
+                        const response = await fetch('/api/folders/create', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const result = await response.json();
+                        if (result.status === 'ok') {
+                            showToast('Cartella creata', 'success');
+                            e.target.reset();
+                            await refreshFoldersAndSlots();
+                        } else {
+                            showToast(result.message || 'Errore', 'error');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        showToast('Errore di connessione', 'error');
+                    }
+                });
+            }
+        });
 
         function escapeHtml(value) {
             return String(value ?? '').replace(/[&<>"']/g, char => ({
@@ -1723,7 +2057,10 @@
         }
 
         // Initial load
-        fetchTalenti();
+        (async () => {
+            await fetchFolders();
+            await fetchTalenti();
+        })();
         fetchScreens();
         fetchNotes();
         fetchMediaLibrary();

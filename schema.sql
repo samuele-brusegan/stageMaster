@@ -2,6 +2,18 @@
 CREATE DATABASE IF NOT EXISTS olmos_talent;
 USE olmos_talent;
 
+-- Cartelle organizzative per gli slot (talenti)
+CREATE TABLE slot_folders (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    parent_id INT NULL,
+    nome VARCHAR(120) NOT NULL,
+    ordine INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (parent_id) REFERENCES slot_folders(id) ON DELETE CASCADE,
+    INDEX idx_folders_parent (parent_id, ordine)
+);
+
 -- Tabella Talenti e Performance
 CREATE TABLE talenti (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -9,7 +21,10 @@ CREATE TABLE talenti (
     categoria VARCHAR(50),
     materiale_palco TEXT,
     note_luci TEXT,
-    ordine_scaletta INT UNIQUE
+    ordine_scaletta INT UNIQUE,
+    folder_id INT NULL,
+    FOREIGN KEY (folder_id) REFERENCES slot_folders(id) ON DELETE SET NULL,
+    INDEX idx_talenti_folder (folder_id)
 );
 
 -- Tabella Screens - Configurazioni schermo

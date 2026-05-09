@@ -24,13 +24,24 @@ $router->add('GET', '/timeline',  'Controller', 'timeline');
 $router->add('GET', '/editor',    'Controller', 'editor');
 
 // ========= Talenti API =========
-$router->add('GET',           '/api/talenti',          'TalentoController', 'list');
-$router->add('GET',           '/api/talento',          'TalentoController', 'show');
-$router->add(['POST', 'PUT'], '/api/talento/update',   'TalentoController', 'update');
-$router->add('POST',          '/api/talento/reorder',  'TalentoController', 'reorder');
-$router->add('POST',          '/api/talenti/aggiungi', 'ApiController',     'addTalento');
-$router->add('DELETE',        '/api/talenti/elimina',  'ApiController',     'deleteTalento');
-$router->add('POST',          '/api/talenti/riordina', 'ApiController',     'reorderTalento');
+$router->add('GET',           '/api/talenti',           'TalentoController', 'list');
+$router->add('GET',           '/api/talenti/by-folder', 'TalentoController', 'byFolder');
+$router->add('GET',           '/api/talento',           'TalentoController', 'show');
+$router->add(['POST', 'PUT'], '/api/talento/update',    'TalentoController', 'update');
+$router->add('POST',          '/api/talento/reorder',   'TalentoController', 'reorder');
+$router->add('POST',          '/api/talento/move',      'TalentoController', 'moveToFolder');
+$router->add('POST',          '/api/talenti/aggiungi',  'ApiController',     'addTalento');
+$router->add('DELETE',        '/api/talenti/elimina',   'ApiController',     'deleteTalento');
+$router->add('POST',          '/api/talenti/riordina',  'ApiController',     'reorderTalento');
+
+// ========= Slot folders API =========
+$router->add('GET',    '/api/folders',         'SlotFolderController', 'index');
+$router->add('GET',    '/api/folders/tree',    'SlotFolderController', 'tree');
+$router->add('GET',    '/api/folders/show',    'SlotFolderController', 'show');
+$router->add('POST',   '/api/folders/create',  'SlotFolderController', 'create');
+$router->add('POST',   '/api/folders/update',  'SlotFolderController', 'update');
+$router->add('POST',   '/api/folders/reorder', 'SlotFolderController', 'reorder');
+$router->add('DELETE', '/api/folders/delete',  'SlotFolderController', 'delete');
 
 // ========= Media API =========
 $router->add('GET',    '/api/media',                  'MediaController', 'index');

@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Controllers;
 
 use App\Models\Talento;
@@ -12,7 +14,15 @@ class TalentoControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
+        $this->executeSql('CREATE TABLE IF NOT EXISTS slot_folders (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            parent_id INT NULL,
+            nome VARCHAR(120) NOT NULL,
+            ordine INT NOT NULL DEFAULT 0,
+            FOREIGN KEY (parent_id) REFERENCES slot_folders(id) ON DELETE CASCADE
+        )');
+
         $this->executeSql("
             CREATE TABLE IF NOT EXISTS talenti (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -20,10 +30,12 @@ class TalentoControllerTest extends TestCase
                 categoria VARCHAR(50),
                 materiale_palco TEXT,
                 note_luci TEXT,
-                ordine_scaletta INT UNIQUE
+                ordine_scaletta INT UNIQUE,
+                folder_id INT NULL,
+                FOREIGN KEY (folder_id) REFERENCES slot_folders(id) ON DELETE SET NULL
             )
         ");
-        
+
         $this->executeSql("
             CREATE TABLE IF NOT EXISTS media_performance (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -33,7 +45,7 @@ class TalentoControllerTest extends TestCase
                 ordine_esecuzione INT
             )
         ");
-        
+
         $this->talentoModel = new Talento($this->db);
     }
 
@@ -100,5 +112,55 @@ class TalentoControllerTest extends TestCase
     {
         $result = $this->talentoModel->reorder([]);
         $this->assertTrue($result);
+    }
+
+    public function testGetScalettaFilteredByFolder(): void
+    {
+        $folderId = $this->insertTestData('slot_folders', ['nome' => 'Atto 1', 'ordine' => 1]);
+
+        $this->insertTestData('talenti', ['nome' => 'Slot in folder',  'ordine_scaletta' => 1, 'folder_id' => $folderId]);
+        $this->insertTestData('talenti', ['nome' => 'Slot unfiled',    'ordine_scaletta' => 2, 'folder_id' => null]);
+
+        $inFolder = $this->talentoModel->getScaletta($folderId);
+        $this->assertCount(1, $inFolder);
+        $this->assertSame('Slot in folder', $inFolder[0]['nome']);
+
+        $unfiled = $this->talentoModel->getScaletta(0);
+        $this->assertCount(1, $unfiled);
+        $this->assertSame('Slot unfiled', $unfiled[0]['nome']);
+
+        $all = $this->talentoModel->getScaletta();
+        $this->assertCount(2, $all);
+    }
+
+    public function testMoveToFolderUpdatesAssignment(): void
+    {
+        $folderId = $this->insertTestData('slot_folders', ['nome' => 'Atto 1', 'ordine' => 1]);
+        $slotId   = $this->insertTestData('talenti', ['nome' => 'Slot', 'ordine_scaletta' => 1]);
+
+        $this->assertTrue($this->talentoModel->moveToFolder($slotId, $folderId));
+        $row = $this->talentoModel->find($slotId);
+        $this->assertSame($folderId, (int) $row['folder_id']);
+
+        $this->assertTrue($this->talentoModel->moveToFolder($slotId, null));
+        $row = $this->talentoModel->find($slotId);
+        $this->assertNull($row['folder_id']);
+    }
+
+    public function testUpdateMergesUnchangedFields(): void
+    {
+        $id = $this->insertTestData('talenti', [
+            'nome' => 'Slot original',
+            'categoria' => 'live',
+            'ordine_scaletta' => 1,
+        ]);
+
+        // Partial update should preserve `nome` and `categoria`.
+        $this->talentoModel->update($id, ['materiale_palco' => 'mic + chitarra']);
+
+        $row = $this->talentoModel->find($id);
+        $this->assertSame('Slot original', $row['nome']);
+        $this->assertSame('live', $row['categoria']);
+        $this->assertSame('mic + chitarra', $row['materiale_palco']);
     }
 }

@@ -1,11 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests\Unit\Models;
 
 use App\Models\Talento;
-use PDO;
-use PDOStatement;
-use PHPUnit\Framework\MockObject\MockObject;
 use Tests\TestCase;
 
 class TalentoTest extends TestCase
@@ -15,9 +14,15 @@ class TalentoTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->talentoModel = new Talento($this->db);
-        
-        // Create test table if not exists
+
+        $this->executeSql('CREATE TABLE IF NOT EXISTS slot_folders (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            parent_id INT NULL,
+            nome VARCHAR(120) NOT NULL,
+            ordine INT NOT NULL DEFAULT 0,
+            FOREIGN KEY (parent_id) REFERENCES slot_folders(id) ON DELETE CASCADE
+        )');
+
         $this->executeSql("
             CREATE TABLE IF NOT EXISTS talenti (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -25,9 +30,13 @@ class TalentoTest extends TestCase
                 categoria VARCHAR(50),
                 materiale_palco TEXT,
                 note_luci TEXT,
-                ordine_scaletta INT UNIQUE
+                ordine_scaletta INT UNIQUE,
+                folder_id INT NULL,
+                FOREIGN KEY (folder_id) REFERENCES slot_folders(id) ON DELETE SET NULL
             )
         ");
+
+        $this->talentoModel = new Talento($this->db);
     }
 
     public function testCreateTalento(): void

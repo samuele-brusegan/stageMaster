@@ -46,16 +46,26 @@ abstract class TestCase extends BaseTestCase
 
     private function cleanDatabase(): void
     {
-        // Drop all tables to ensure clean state
-        $tables = ['transizioni', 'note_tecniche', 'screens', 'player_state', 'media_performance', 'talenti', 'media'];
-        
+        $tables = [
+            'message_templates', 'messages',
+            'script_annotations', 'scripts',
+            'auth_tokens', 'users',
+            'media_segments',
+            'transizioni', 'note_tecniche', 'media_queue',
+            'player_state', 'media_performance',
+            'talenti', 'slot_folders',
+            'screens', 'media',
+        ];
+
+        $this->db->exec('SET FOREIGN_KEY_CHECKS = 0');
         foreach ($tables as $table) {
             try {
                 $this->db->exec("DROP TABLE IF EXISTS $table");
             } catch (\PDOException $e) {
-                // Table might not exist, continue
+                // Best-effort cleanup; ignore tables that can't be dropped.
             }
         }
+        $this->db->exec('SET FOREIGN_KEY_CHECKS = 1');
     }
 
     protected function tearDown(): void
