@@ -8,6 +8,13 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         body { cursor: none; }
+        /* Projector output is intentionally blank: media is played (audio keeps
+           flowing) but visual content is hidden. Use visibility:hidden instead of
+           display:none so video/audio playback continues uninterrupted. */
+        #main-image,
+        #main-video,
+        #audio-label,
+        #empty-label { visibility: hidden !important; }
     </style>
 </head>
 <body class="h-full flex items-center justify-center overflow-hidden">
@@ -44,6 +51,7 @@
         console.log("Proiettore: Inizializzazione per screen_id:", screenId);
         let currentMediaPath = null;
         let currentMediaType = null;
+        let currentMediaFriendlyName = null;
         let slotTimeline = [];
         let activeTimelineMediaId = null;
         let timelineLoadToken = 0;
@@ -135,6 +143,7 @@
             overlay.style.opacity = '0';
             currentMediaPath = null;
             currentMediaType = null;
+            currentMediaFriendlyName = null;
         }
 
         function showBlack() {
@@ -144,6 +153,7 @@
             overlay.style.opacity = '0';
             currentMediaPath = null;
             currentMediaType = null;
+            currentMediaFriendlyName = null;
             activeTimelineMediaId = null;
         }
 
@@ -169,6 +179,7 @@
 
             currentMediaPath = path;
             currentMediaType = type;
+            currentMediaFriendlyName = media.friendly_name || null;
             activeTimelineMediaId = mediaId;
             hideAllMedia();
             overlay.style.opacity = '0';
@@ -484,7 +495,7 @@
                 tipo_media: currentMediaType,
                 currentTime: currentMediaType === 'VIDEO' ? video.currentTime : audio.currentTime,
                 duration: currentMediaType === 'VIDEO' ? video.duration : audio.duration,
-                mediaName: currentMediaPath ? currentMediaPath.split('/').pop() : 'Nessuno',
+                mediaName: currentMediaFriendlyName || (currentMediaPath ? currentMediaPath.split('/').pop() : 'Nessuno'),
                 playing: currentMediaType === 'VIDEO' ? !video.paused : currentMediaType === 'AUDIO' ? !audio.paused : currentMediaType === 'FOTO',
                 active: Boolean(currentMediaPath),
                 timestamp: Date.now()

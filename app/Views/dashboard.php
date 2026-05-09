@@ -723,7 +723,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
                             </svg>
                         </div>
-                        <span id="screen-${screen.id}-label" class="text-slate-600 font-mono text-xs absolute">${screen.nome}</span>
+                        <span id="screen-${screen.id}-label" data-default-name="${String(screen.nome).replace(/"/g, '&quot;')}" class="absolute inset-0 flex items-center justify-center text-center px-3 text-slate-600 font-mono text-xs">${screen.nome}</span>
                         <div id="screen-${screen.id}-cursor" class="screen-cursor-dot"></div>
                     </div>
                 `;
@@ -828,7 +828,7 @@
                         active: true,
                         src: normalizedPath,
                         tipo_media: media.tipo_media || inferPreviewType(normalizedPath, media.file_name),
-                        mediaName: media.file_name,
+                        mediaName: media.friendly_name || media.file_name,
                         currentTime: 0
                     });
                 } else {
@@ -926,6 +926,9 @@
             return 'VIDEO';
         }
 
+        const SCREEN_LABEL_IDLE_CLASSES = 'absolute inset-0 flex items-center justify-center text-center px-3 text-slate-600 font-mono text-xs';
+        const SCREEN_LABEL_ACTIVE_CLASSES = 'absolute inset-0 flex items-center justify-center text-center px-4 text-white font-bold text-xl md:text-2xl break-words leading-tight';
+
         function applyScreenPreview(screenId, status) {
             const video = document.getElementById(`screen-${screenId}-video`);
             const image = document.getElementById(`screen-${screenId}-image`);
@@ -936,43 +939,28 @@
 
             if (!video || !image || !placeholder || !label || !cursor || !stage) return;
 
+            // Media previews (video/image/placeholder) are intentionally NOT shown in
+            // the dashboard card: we display the media's friendly name on a black
+            // stage instead, matching the blacked-out projector output.
+            video.classList.add('hidden');
+            video.removeAttribute('src');
+            video.load();
+            image.classList.add('hidden');
+            image.removeAttribute('src');
+            placeholder.classList.add('hidden');
+
             if (!status || !status.active || !status.src) {
-                video.classList.add('hidden');
-                video.removeAttribute('src');
-                video.load();
-                image.classList.add('hidden');
-                image.removeAttribute('src');
-                placeholder.classList.add('hidden');
-                label.style.display = 'none';
                 stage.dataset.active = 'false';
+                label.className = SCREEN_LABEL_IDLE_CLASSES;
+                label.textContent = label.dataset.defaultName || '';
+                label.style.display = '';
                 return;
             }
 
             stage.dataset.active = 'true';
-            placeholder.classList.add('hidden');
-            label.style.display = 'none';
-            const type = (status.tipo_media || inferPreviewType(status.src, status.mediaName)).toUpperCase();
-            const src = String(status.src).replace(/\\/g, '/');
-
-            if (type === 'FOTO') {
-                image.src = src;
-                image.classList.remove('hidden');
-                video.classList.add('hidden');
-            } else if (type === 'AUDIO') {
-                image.classList.add('hidden');
-                video.classList.add('hidden');
-                placeholder.classList.remove('hidden');
-            } else {
-                image.classList.add('hidden');
-                video.src = src;
-                video.classList.remove('hidden');
-                if (status.currentTime !== undefined && Number.isFinite(Number(status.currentTime))) {
-                    const nextTime = Number(status.currentTime);
-                    if (Math.abs(video.currentTime - nextTime) > 0.5) {
-                        video.currentTime = nextTime;
-                    }
-                }
-            }
+            label.className = SCREEN_LABEL_ACTIVE_CLASSES;
+            label.textContent = status.mediaName || label.dataset.defaultName || '';
+            label.style.display = '';
         }
 
         const screenCursorTimers = {};
