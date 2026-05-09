@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Database\Connection;
 use App\Models\MediaLibrary;
+use App\Support\MediaProbe;
 use PDO;
 
 class MediaLibraryController extends ApiController
@@ -152,7 +153,7 @@ class MediaLibraryController extends ApiController
         // Get duration for video/audio (requires ffprobe)
         $durationSec = null;
         if ($fileType === 'VIDEO' || $fileType === 'AUDIO') {
-            $durationSec = $this->getMediaDuration($uploadPath);
+            $durationSec = MediaProbe::durationFromAbsolutePath($uploadPath);
         }
 
         // Save to database
@@ -187,15 +188,39 @@ class MediaLibraryController extends ApiController
         };
     }
 
+    private function publicDir(): string
+    {
+        return realpath(__DIR__ . '/../../public') ?: __DIR__ . '/../../public';
+    }
+
     /**
-     * Get media duration using ffprobe
+     * Recompute and persist duration for an existing library entry.
+     * Useful for legacy rows registered before ffprobe was available.
      */
-    private function getMediaDuration($filePath) {
-        $output = shell_exec("ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 " . escapeshellarg($filePath) . " 2>&1");
-        if ($output && is_numeric($output)) {
-            return (int) $output;
+    public function refreshDuration(): void
+    {
+        $id = $_GET['id'] ?? null;
+        if (!$id) {
+            $this->json(['status' => 'error', 'message' => 'Missing media ID'], 400);
+            return;
         }
-        return null;
+        $media = $this->mediaLibrary->find((int) $id);
+        if (!$media) {
+            $this->json(['status' => 'error', 'message' => 'Media not found'], 404);
+            return;
+        }
+        if (!in_array(strtoupper((string)$media['file_type']), ['AUDIO', 'VIDEO'], true)) {
+            $this->json(['status' => 'ok', 'duration_sec' => null, 'message' => 'Tipo media senza durata']);
+            return;
+        }
+        $duration = MediaProbe::durationFromWebPath((string)$media['file_path'], $this->publicDir());
+        $this->mediaLibrary->updateDuration((int) $media['id'], $duration);
+        $this->json([
+            'status' => 'ok',
+            'id' => (int) $media['id'],
+            'duration_sec' => $duration,
+            'message' => $duration === null ? 'Durata non rilevabile' : 'Durata aggiornata',
+        ]);
     }
 
     /**
@@ -264,11 +289,16 @@ class MediaLibraryController extends ApiController
                         continue;
                     }
 
+                    $durationSec = null;
+                    if ($fileType === 'AUDIO' || $fileType === 'VIDEO') {
+                        $durationSec = MediaProbe::durationFromAbsolutePath($fullPath);
+                    }
                     $unregistered[] = [
                         'file_name' => $file,
                         'file_path' => $filePath,
                         'file_type' => $fileType,
-                        'file_size' => $fileSize
+                        'file_size' => $fileSize,
+                        'duration_sec' => $durationSec,
                     ];
                 }
             }
@@ -291,14 +321,18 @@ class MediaLibraryController extends ApiController
             foreach ($files as $file) {
                 $existing = $this->mediaLibrary->findByPath($file['file_path']);
                 if (!$existing) {
+                    $durationSec = $file['duration_sec'] ?? null;
+                    if ($durationSec === null && in_array(strtoupper((string)$file['file_type']), ['AUDIO', 'VIDEO'], true)) {
+                        $durationSec = MediaProbe::durationFromWebPath((string)$file['file_path'], $this->publicDir());
+                    }
                     $mediaId = $this->mediaLibrary->create([
                         'file_name' => $file['file_name'],
                         'file_path' => $file['file_path'],
                         'file_type' => $file['file_type'],
                         'file_size' => $file['file_size'],
-                        'duration_sec' => null
+                        'duration_sec' => $durationSec,
                     ]);
-                    $registered[] = ['id' => $mediaId, 'file_name' => $file['file_name']];
+                    $registered[] = ['id' => $mediaId, 'file_name' => $file['file_name'], 'duration_sec' => $durationSec];
                 }
             }
 

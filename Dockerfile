@@ -1,6 +1,6 @@
 FROM php:8.2-apache
 
-# Install system dependencies
+# Install system dependencies (ffmpeg provides ffprobe used to derive media durations)
 RUN apt-get update && apt-get install -y \
     libpng-dev \
     libonig-dev \
@@ -8,7 +8,8 @@ RUN apt-get update && apt-get install -y \
     zip \
     unzip \
     git \
-    curl
+    curl \
+    ffmpeg
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*

@@ -83,5 +83,6 @@ $router->add('GET',    '/api/transizioni/get-or-create', 'TransizioneController'
 $router->add('GET',    '/api/media-library',          'MediaLibraryController', 'index');
 $router->add('POST',   '/api/media-library/upload',   'MediaLibraryController', 'upload');
 $router->add('DELETE', '/api/media-library/delete',   'MediaLibraryController', 'delete');
-$router->add('GET',    '/api/media-library/scan',     'MediaLibraryController', 'scan');
-$router->add('POST',   '/api/media-library/register', 'MediaLibraryController', 'register');
+$router->add('GET',    '/api/media-library/scan',             'MediaLibraryController', 'scan');
+$router->add('POST',   '/api/media-library/register',         'MediaLibraryController', 'register');
+$router->add('POST',   '/api/media-library/refresh-duration', 'MediaLibraryController', 'refreshDuration');

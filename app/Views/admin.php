@@ -1260,11 +1260,12 @@
                 card.type = 'button';
                 card.className = `p-3 rounded-xl border text-left flex gap-3 items-center ${selected ? 'border-green-500 bg-green-500/10' : 'border-slate-700 bg-slate-900 hover:bg-slate-800'}`;
                 card.onclick = () => selectWizardMedia(item);
+                const duration = formatDuration(item.duration_sec);
                 card.innerHTML = `
                     ${getMediaPreviewMarkup(item, 'w-16 h-12')}
                     <div class="min-w-0">
                         <p class="font-semibold text-sm truncate">${escapeHtml(item.file_name)}</p>
-                        <p class="text-xs text-slate-500">${item.file_type} - ${formatFileSize(item.file_size)}</p>
+                        <p class="text-xs text-slate-500">${item.file_type} - ${formatFileSize(item.file_size)}${duration ? ' - ' + duration : ''}</p>
                     </div>
                 `;
                 list.appendChild(card);
@@ -1452,11 +1453,19 @@
             document.getElementById('wizard-duplicate-warning').classList.toggle('hidden', !mediaWizard.duplicate);
             document.getElementById('wizard-save-btn').textContent = mediaWizard.duplicate ? 'Salva duplicato' : 'Salva';
 
+            const durationLabel = formatDuration(media && media.duration_sec);
+            const durationValue = durationLabel
+                ? `${durationLabel} (default)`
+                : (media && (media.file_type === 'AUDIO' || media.file_type === 'VIDEO'))
+                    ? 'Da rilevare al salvataggio'
+                    : 'Non applicabile';
+
             document.getElementById('wizard-summary').innerHTML = `
                 ${summaryCard('Slot', slot.nome)}
                 ${summaryCard('Media', media.file_name)}
                 ${summaryCard('Schermo', screen ? screen.nome : '')}
                 ${summaryCard('Tipo', document.getElementById('wizard-type-select').value)}
+                ${summaryCard('Durata di default', durationValue)}
                 ${summaryCard('Timeline', 'Aggiunto alla timeline dello slot')}
             `;
         }
@@ -1938,18 +1947,32 @@
             media.forEach(m => {
                 const item = document.createElement('div');
                 item.className = 'flex items-center justify-between p-4 bg-slate-800/50 rounded-xl group hover:bg-slate-800 transition-colors';
+                const duration = formatDuration(m.duration_sec);
+                const isMedia = m.file_type === 'VIDEO' || m.file_type === 'AUDIO';
+                const durationBadge = duration
+                    ? `<span class="text-xs text-slate-300 font-mono" title="Durata">${duration}</span>`
+                    : isMedia
+                        ? `<span class="text-xs text-amber-400/80" title="Durata sconosciuta">--:--</span>`
+                        : '';
+                const refreshBtn = isMedia
+                    ? `<button onclick="refreshMediaDuration(${m.id})" class="p-2 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-blue-400 transition-colors" title="Ricalcola durata">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        </button>`
+                    : '';
                 item.innerHTML = `
                     <div class="flex items-center gap-4">
                         <input type="checkbox" ${selectedItems.library.has(String(m.id)) ? 'checked' : ''} onchange="setSelected('library', ${m.id}, this.checked)">
                         <span class="px-2 py-0.5 rounded text-[10px] ${m.file_type === 'VIDEO' ? 'bg-red-500/20 text-red-400' : m.file_type === 'FOTO' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'} border border-current">${m.file_type}</span>
                         <div>
-                            <p class="font-semibold">${m.file_name}</p>
-                            <p class="text-xs text-slate-500">${m.file_path}</p>
+                            <p class="font-semibold">${escapeHtml(m.file_name)}</p>
+                            <p class="text-xs text-slate-500">${escapeHtml(m.file_path)}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-3">
+                        ${durationBadge}
                         <span class="text-xs text-slate-500">${formatFileSize(m.file_size)}</span>
-                        <button onclick="deleteMediaLibrary(${m.id})" class="p-2 hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-400 transition-colors">
+                        ${refreshBtn}
+                        <button onclick="deleteMediaLibrary(${m.id})" class="p-2 hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-400 transition-colors" title="Elimina">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                         </button>
                     </div>
@@ -1964,6 +1987,32 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB'];
             const i = Math.floor(Math.log(bytes) / Math.log(1024));
             return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+        }
+
+        function formatDuration(seconds) {
+            if (seconds === null || seconds === undefined || seconds === '' || isNaN(Number(seconds))) return null;
+            const total = Math.max(0, Math.round(Number(seconds)));
+            const h = Math.floor(total / 3600);
+            const m = Math.floor((total % 3600) / 60);
+            const s = total % 60;
+            const pad = (n) => String(n).padStart(2, '0');
+            return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+        }
+
+        async function refreshMediaDuration(id) {
+            try {
+                const response = await fetch(`/api/media-library/refresh-duration?id=${id}`, { method: 'POST' });
+                const result = await response.json();
+                if (result.status === 'ok') {
+                    showToast(result.message || 'Durata aggiornata', result.duration_sec ? 'success' : 'info');
+                    await fetchMediaLibrary();
+                } else {
+                    showToast(result.message || 'Errore', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                showToast('Errore di connessione', 'error');
+            }
         }
 
         async function deleteMediaLibrary(id) {

@@ -10,6 +10,7 @@ use App\Models\MediaLibrary;
 use App\Models\Screen;
 use App\Models\Talento;
 use App\Models\Transizione;
+use App\Support\MediaProbe;
 use PDO;
 
 class MediaController extends ApiController
@@ -93,11 +94,8 @@ class MediaController extends ApiController
 
         $this->db->beginTransaction();
         try {
-            $duration  = null;
             $mediaType = strtoupper((string)($data['tipo_media'] ?? $libraryMedia['file_type'] ?? 'VIDEO'));
-            if (in_array($mediaType, ['AUDIO', 'VIDEO'], true) && !empty($libraryMedia['duration_sec'])) {
-                $duration = max(1, (int) round((float) $libraryMedia['duration_sec']));
-            }
+            $duration  = $this->resolveDefaultDuration($mediaLibrary, $libraryMedia, $mediaType);
 
             $mediaId = $this->mediaModel->create([
                 'talento_id'        => (int)$data['talento_id'],
@@ -178,6 +176,32 @@ class MediaController extends ApiController
         }
 
         $this->json(['status' => 'ok', 'message' => 'Timeline riordinata']);
+    }
+
+    /**
+     * Resolve a sensible default duration (in seconds) for a slot media entry.
+     *
+     * Order of resolution:
+     *   1. Cached `media.duration_sec` from the library row.
+     *   2. Fresh ffprobe call against the media file (writethrough on success).
+     * For non audio/video types this returns null.
+     */
+    protected function resolveDefaultDuration(MediaLibrary $library, array $libraryMedia, string $mediaType): ?int
+    {
+        if (!in_array($mediaType, ['AUDIO', 'VIDEO'], true)) {
+            return null;
+        }
+        if (!empty($libraryMedia['duration_sec'])) {
+            return max(1, (int) round((float) $libraryMedia['duration_sec']));
+        }
+
+        $publicDir = realpath(__DIR__ . '/../../public') ?: __DIR__ . '/../../public';
+        $probed = MediaProbe::durationFromWebPath((string) $libraryMedia['file_path'], $publicDir);
+        if ($probed !== null) {
+            $library->updateDuration((int) $libraryMedia['id'], $probed);
+            return max(1, $probed);
+        }
+        return null;
     }
 
     /** API: Get all media for a talent */

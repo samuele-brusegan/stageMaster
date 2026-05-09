@@ -63,6 +63,14 @@ class MediaLibrary {
     }
 
     /**
+     * Persist a freshly probed duration (in whole seconds, or null to clear).
+     */
+    public function updateDuration(int $id, ?int $durationSec): bool {
+        $stmt = $this->db->prepare("UPDATE media SET duration_sec = :d WHERE id = :id");
+        return $stmt->execute(['d' => $durationSec, 'id' => $id]);
+    }
+
+    /**
      * Get media by type
      */
     public function getByType($type) {

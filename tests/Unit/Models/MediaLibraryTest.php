@@ -173,4 +173,31 @@ class MediaLibraryTest extends TestCase
         $media = $this->mediaLibraryModel->find($id);
         $this->assertFalse($media);
     }
+
+    public function testUpdateDurationPersistsValue(): void
+    {
+        $id = (int) $this->insertTestData('media', [
+            'file_name' => 'dur.mp4',
+            'file_path' => '/media/dur.mp4',
+            'file_type' => 'VIDEO',
+        ]);
+
+        $this->assertTrue($this->mediaLibraryModel->updateDuration($id, 123));
+        $row = $this->mediaLibraryModel->find($id);
+        $this->assertSame(123, (int) $row['duration_sec']);
+    }
+
+    public function testUpdateDurationCanClearValue(): void
+    {
+        $id = (int) $this->insertTestData('media', [
+            'file_name' => 'dur.mp4',
+            'file_path' => '/media/dur2.mp4',
+            'file_type' => 'AUDIO',
+            'duration_sec' => 42,
+        ]);
+
+        $this->assertTrue($this->mediaLibraryModel->updateDuration($id, null));
+        $row = $this->mediaLibraryModel->find($id);
+        $this->assertNull($row['duration_sec']);
+    }
 }

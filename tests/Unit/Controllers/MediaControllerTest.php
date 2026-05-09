@@ -2,8 +2,24 @@
 
 namespace Tests\Unit\Controllers;
 
+use App\Controllers\MediaController;
 use App\Models\Media;
+use App\Models\MediaLibrary;
 use Tests\TestCase;
+
+/**
+ * Test-only subclass that exposes the protected resolveDefaultDuration helper
+ * and skips the DB-connecting constructor.
+ */
+final class TestableMediaController extends MediaController
+{
+    public function __construct() { /* bypass DB bootstrap */ }
+
+    public function exposeResolveDefaultDuration(MediaLibrary $library, array $row, string $type): ?int
+    {
+        return $this->resolveDefaultDuration($library, $row, $type);
+    }
+}
 
 class MediaControllerTest extends TestCase
 {
@@ -109,5 +125,68 @@ class MediaControllerTest extends TestCase
     {
         $result = $this->mediaModel->find(99999);
         $this->assertFalse($result);
+    }
+
+    public function testResolveDefaultDurationUsesCachedValueForVideo(): void
+    {
+        $this->ensureMediaLibraryTable();
+        $library = new MediaLibrary($this->db);
+        $controller = new TestableMediaController();
+        $row = [
+            'id' => 1,
+            'file_path' => '/media/anything.mp4',
+            'duration_sec' => 240,
+        ];
+        $this->assertSame(240, $controller->exposeResolveDefaultDuration($library, $row, 'VIDEO'));
+    }
+
+    public function testResolveDefaultDurationReturnsNullForFotoEvenIfCached(): void
+    {
+        $this->ensureMediaLibraryTable();
+        $library = new MediaLibrary($this->db);
+        $controller = new TestableMediaController();
+        $row = [
+            'id' => 1,
+            'file_path' => '/media/anything.jpg',
+            'duration_sec' => 999,
+        ];
+        $this->assertNull($controller->exposeResolveDefaultDuration($library, $row, 'FOTO'));
+    }
+
+    public function testResolveDefaultDurationReturnsNullWhenLibraryHasNoCacheAndFileMissing(): void
+    {
+        $this->ensureMediaLibraryTable();
+        $library = new MediaLibrary($this->db);
+        $controller = new TestableMediaController();
+        $row = [
+            'id' => 1,
+            'file_path' => '/media/missing-file-' . uniqid() . '.mp4',
+            'duration_sec' => null,
+        ];
+        $this->assertNull($controller->exposeResolveDefaultDuration($library, $row, 'AUDIO'));
+    }
+
+    public function testResolveDefaultDurationCoercesFloatToInt(): void
+    {
+        $this->ensureMediaLibraryTable();
+        $library = new MediaLibrary($this->db);
+        $controller = new TestableMediaController();
+        $row = ['id' => 1, 'file_path' => '/media/x.mp4', 'duration_sec' => 12.7];
+        $this->assertSame(13, $controller->exposeResolveDefaultDuration($library, $row, 'VIDEO'));
+    }
+
+    private function ensureMediaLibraryTable(): void
+    {
+        $this->executeSql("
+            CREATE TABLE IF NOT EXISTS media (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                file_name VARCHAR(255) NOT NULL,
+                file_path VARCHAR(255) NOT NULL,
+                file_type ENUM('VIDEO', 'AUDIO', 'FOTO') NOT NULL,
+                file_size INT,
+                duration_sec INT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
     }
 }
