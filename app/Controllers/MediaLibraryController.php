@@ -1,21 +1,28 @@
 <?php
 
-require_once BASE_PATH . '/app/Controllers/ApiController.php';
+declare(strict_types=1);
 
-class MediaLibraryController extends ApiController {
+namespace App\Controllers;
 
-    private $db;
-    private $mediaLibrary;
+use App\Database\Connection;
+use App\Models\MediaLibrary;
+use PDO;
 
-    public function __construct() {
-        $this->db = (new DatabaseConnector())->getConnection();
-        $this->mediaLibrary = new \App\Models\MediaLibrary($this->db);
+class MediaLibraryController extends ApiController
+{
+    private PDO $db;
+    private MediaLibrary $mediaLibrary;
+
+    public function __construct()
+    {
+        $this->db = Connection::getInstance();
+        $this->mediaLibrary = new MediaLibrary($this->db);
     }
 
     /**
      * Get all media
      */
-    public function index() {
+    public function index(): void {
         try {
             $media = $this->mediaLibrary->getAll();
             $this->json(['status' => 'ok', 'data' => $media]);
@@ -27,7 +34,7 @@ class MediaLibraryController extends ApiController {
     /**
      * Upload one or more media files
      */
-    public function upload() {
+    public function upload(): void {
         try {
             $maxUploadBytes = 200 * 1024 * 1024;
             $contentLength = (int)($_SERVER['CONTENT_LENGTH'] ?? 0);
@@ -194,7 +201,7 @@ class MediaLibraryController extends ApiController {
     /**
      * Delete media
      */
-    public function delete() {
+    public function delete(): void {
         try {
             $id = $_GET['id'] ?? null;
             if (!$id) {
@@ -224,7 +231,7 @@ class MediaLibraryController extends ApiController {
     /**
      * Scan media directory for unregistered files
      */
-    public function scan() {
+    public function scan(): void {
         try {
             $mediaDir = __DIR__ . '/../../public/media';
             $files = scandir($mediaDir);
@@ -275,7 +282,7 @@ class MediaLibraryController extends ApiController {
     /**
      * Register scanned media files
      */
-    public function register() {
+    public function register(): void {
         try {
             $input = json_decode(file_get_contents('php://input'), true);
             $files = $input['files'] ?? [];
@@ -300,4 +307,8 @@ class MediaLibraryController extends ApiController {
             $this->json(['status' => 'error', 'message' => $e->getMessage()], 500);
         }
     }
+}
+
+if (!class_exists('MediaLibraryController', false)) {
+    class_alias(\App\Controllers\MediaLibraryController::class, 'MediaLibraryController');
 }

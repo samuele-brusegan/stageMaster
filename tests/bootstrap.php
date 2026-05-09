@@ -1,33 +1,15 @@
 <?php
 
-// Test bootstrap file
+declare(strict_types=1);
+
+// PHPUnit test bootstrap. Relies entirely on Composer PSR-4 autoload;
+// legacy `require_once` chains have been removed.
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Define base path for the application
-define('BASE_PATH', dirname(__DIR__));
+if (!defined('BASE_PATH')) {
+    define('BASE_PATH', dirname(__DIR__));
+}
 
-// Load the application's imports for class loading (manual autoloader)
-require_once BASE_PATH . '/app/Router.php';
+// Database adapter shim and small helpers used by some legacy tests.
 require_once BASE_PATH . '/public/functions.php';
-
-// Load Controllers
-require_once BASE_PATH . '/app/Controllers/Controller.php';
-require_once BASE_PATH . '/app/Controllers/ApiController.php';
-require_once BASE_PATH . '/app/Controllers/TalentoController.php';
-require_once BASE_PATH . '/app/Controllers/MediaController.php';
-require_once BASE_PATH . '/app/Controllers/PlayerStateController.php';
-require_once BASE_PATH . '/app/Controllers/ScreenController.php';
-require_once BASE_PATH . '/app/Controllers/QueueController.php';
-require_once BASE_PATH . '/app/Controllers/NoteController.php';
-require_once BASE_PATH . '/app/Controllers/TransizioneController.php';
-require_once BASE_PATH . '/app/Controllers/MediaLibraryController.php';
-
-// Load Models
 require_once BASE_PATH . '/app/Models/databaseConnector.php';
-require_once BASE_PATH . '/app/Models/Talento.php';
-require_once BASE_PATH . '/app/Models/Media.php';
-require_once BASE_PATH . '/app/Models/PlayerState.php';
-require_once BASE_PATH . '/app/Models/Screen.php';
-require_once BASE_PATH . '/app/Models/NoteTecniche.php';
-require_once BASE_PATH . '/app/Models/Transizione.php';
-require_once BASE_PATH . '/app/Models/MediaLibrary.php';

@@ -5,23 +5,21 @@
  * sotto la licenza MIT. Vedere il file LICENSE per i dettagli.
  */
 
-// use cvv\Collegamenti;
-// use cvv\CvvIntegration;
+declare(strict_types=1);
+
 require_once dirname(__DIR__) . '/app/bootstrap.php';
 
 session_start();
 checkSessionExpiration();
 
-
-// Inizializza il router
-$router = new Router();
-
-// Definisci le rotte
+$router = new \App\Router();
 require BASE_PATH . '/public/routes.php';
 
-//Send globals to JS
-//Send globals to JS
-if (strpos($_SERVER['REQUEST_URI'], '/api/') === false && strpos($_SERVER['REQUEST_URI'], '/gtfs-test') === false) {
+$requestUri    = $_SERVER['REQUEST_URI']    ?? '/';
+$requestMethod = $_SERVER['REQUEST_METHOD'] ?? 'GET';
+
+// Bootstrap window globals for views (skip for API and stream calls).
+if (strpos($requestUri, '/api/') === false && strpos($requestUri, '/sse/') === false) {
     echo "
     <script>
         sessionStorage.setItem('url', '" . URL_PATH . "');
@@ -29,7 +27,4 @@ if (strpos($_SERVER['REQUEST_URI'], '/api/') === false && strpos($_SERVER['REQUE
     </script>";
 }
 
-// Ottieni l'URL richiesto e fai partire il router
-$url = $_SERVER['REQUEST_URI'];
-$router->dispatch($url);
-?>
+$router->dispatch($requestUri, $requestMethod);

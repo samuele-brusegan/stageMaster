@@ -1,96 +1,104 @@
 <?php
 
-require_once BASE_PATH . '/app/Controllers/ApiController.php';
+declare(strict_types=1);
 
-class ScreenController extends ApiController {
+namespace App\Controllers;
 
-    public function index() {
+use App\Database\Connection;
+use App\Models\Screen;
+
+class ScreenController extends ApiController
+{
+    private Screen $screenModel;
+
+    public function __construct()
+    {
+        $this->screenModel = new Screen(Connection::getInstance());
+    }
+
+    public function index(): void
+    {
         header('Content-Type: application/json');
         try {
-            $db = (new DatabaseConnector())->getConnection();
-            $screenModel = new \App\Models\Screen($db);
-            $screens = $screenModel->getAll();
-            echo json_encode(['status' => 'ok', 'data' => $screens]);
-        } catch (\Exception $e) {
+            echo json_encode(['status' => 'ok', 'data' => $this->screenModel->getAll()]);
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function show() {
+    public function show(): void
+    {
         header('Content-Type: application/json');
         try {
             $id = $_GET['id'] ?? null;
-            if (!$id) throw new \Exception("ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $screenModel = new \App\Models\Screen($db);
-            $screen = $screenModel->find($id);
-            
-            if (!$screen) {
-                throw new \Exception("Screen non trovato");
+            if (!$id) {
+                throw new \RuntimeException('ID mancante');
             }
-            
-            $screen['media'] = $screenModel->getMedia($id);
+            $screen = $this->screenModel->find((int)$id);
+            if (!$screen) {
+                throw new \RuntimeException('Screen non trovato');
+            }
+            $screen['media'] = $this->screenModel->getMedia((int)$id);
             echo json_encode(['status' => 'ok', 'data' => $screen]);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function create() {
+    public function create(): void
+    {
         header('Content-Type: application/json');
         try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            if (!is_array($data)) {
+            $data = $this->getJsonInput();
+            if (empty($data)) {
                 http_response_code(400);
                 echo json_encode(['status' => 'error', 'message' => 'Payload JSON non valido']);
                 return;
             }
-            $db = (new DatabaseConnector())->getConnection();
-            $screenModel = new \App\Models\Screen($db);
-            
-            $id = $screenModel->create($data);
+            $id = $this->screenModel->create($data);
             echo json_encode(['status' => 'ok', 'id' => $id, 'message' => 'Screen creato']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function update() {
+    public function update(): void
+    {
         header('Content-Type: application/json');
         try {
             $id = $_GET['id'] ?? null;
-            if (!$id) throw new \Exception("ID mancante");
-            
-            $data = json_decode(file_get_contents('php://input'), true);
-            $db = (new DatabaseConnector())->getConnection();
-            $screenModel = new \App\Models\Screen($db);
-            
-            $screenModel->update($id, $data);
+            if (!$id) {
+                throw new \RuntimeException('ID mancante');
+            }
+            $data = $this->getJsonInput();
+            $this->screenModel->update((int)$id, $data);
             echo json_encode(['status' => 'ok', 'message' => 'Screen aggiornato']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function delete() {
+    public function delete(): void
+    {
         header('Content-Type: application/json');
         try {
             $id = $_GET['id'] ?? null;
-            if (!$id) throw new \Exception("ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $screenModel = new \App\Models\Screen($db);
-            $screenModel->delete($id);
-            
+            if (!$id) {
+                throw new \RuntimeException('ID mancante');
+            }
+            $this->screenModel->delete((int)$id);
             echo json_encode(['status' => 'ok', 'message' => 'Screen eliminato']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
+}
+
+if (!class_exists('ScreenController', false)) {
+    class_alias(\App\Controllers\ScreenController::class, 'ScreenController');
 }

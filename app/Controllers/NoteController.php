@@ -1,61 +1,68 @@
 <?php
 
-require_once BASE_PATH . '/app/Controllers/ApiController.php';
+declare(strict_types=1);
 
-class NoteController extends ApiController {
+namespace App\Controllers;
 
-    public function index() {
+use App\Database\Connection;
+use App\Models\NoteTecniche;
+
+class NoteController extends ApiController
+{
+    private NoteTecniche $noteModel;
+
+    public function __construct()
+    {
+        $this->noteModel = new NoteTecniche(Connection::getInstance());
+    }
+
+    public function index(): void
+    {
         header('Content-Type: application/json');
         try {
-            $db = (new DatabaseConnector())->getConnection();
-            $noteModel = new \App\Models\NoteTecniche($db);
-            $notes = $noteModel->getAll();
-            echo json_encode(['status' => 'ok', 'data' => $notes]);
-        } catch (\Exception $e) {
+            echo json_encode(['status' => 'ok', 'data' => $this->noteModel->getAll()]);
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function show() {
+    public function show(): void
+    {
         header('Content-Type: application/json');
         try {
-            $talento_id = $_GET['talento_id'] ?? null;
-            if (!$talento_id) throw new \Exception("Talento ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $noteModel = new \App\Models\NoteTecniche($db);
-            $notes = $noteModel->getByTalento($talento_id);
-            
-            echo json_encode(['status' => 'ok', 'data' => $notes]);
-        } catch (\Exception $e) {
+            $talentoId = $_GET['talento_id'] ?? null;
+            if (!$talentoId) {
+                throw new \RuntimeException('Talento ID mancante');
+            }
+            echo json_encode(['status' => 'ok', 'data' => $this->noteModel->getByTalento((int)$talentoId)]);
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function grouped() {
+    public function grouped(): void
+    {
         header('Content-Type: application/json');
         try {
-            $talento_id = $_GET['talento_id'] ?? null;
-            if (!$talento_id) throw new \Exception("Talento ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $noteModel = new \App\Models\NoteTecniche($db);
-            $notes = $noteModel->getGroupedByType($talento_id);
-            
-            echo json_encode(['status' => 'ok', 'data' => $notes]);
-        } catch (\Exception $e) {
+            $talentoId = $_GET['talento_id'] ?? null;
+            if (!$talentoId) {
+                throw new \RuntimeException('Talento ID mancante');
+            }
+            echo json_encode(['status' => 'ok', 'data' => $this->noteModel->getGroupedByType((int)$talentoId)]);
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function create() {
+    public function create(): void
+    {
         header('Content-Type: application/json');
         try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            if (!is_array($data)) {
+            $data = $this->getJsonInput();
+            if (empty($data)) {
                 http_response_code(400);
                 echo json_encode(['status' => 'error', 'message' => 'Payload JSON non valido']);
                 return;
@@ -65,49 +72,48 @@ class NoteController extends ApiController {
                 echo json_encode(['status' => 'error', 'message' => 'Tipo e contenuto sono obbligatori']);
                 return;
             }
-            $db = (new DatabaseConnector())->getConnection();
-            $noteModel = new \App\Models\NoteTecniche($db);
-            
-            $id = $noteModel->create($data);
+            $id = $this->noteModel->create($data);
             echo json_encode(['status' => 'ok', 'id' => $id, 'message' => 'Nota creata']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function update() {
+    public function update(): void
+    {
         header('Content-Type: application/json');
         try {
             $id = $_GET['id'] ?? null;
-            if (!$id) throw new \Exception("ID mancante");
-            
-            $data = json_decode(file_get_contents('php://input'), true);
-            $db = (new DatabaseConnector())->getConnection();
-            $noteModel = new \App\Models\NoteTecniche($db);
-            
-            $noteModel->update($id, $data);
+            if (!$id) {
+                throw new \RuntimeException('ID mancante');
+            }
+            $data = $this->getJsonInput();
+            $this->noteModel->update((int)$id, $data);
             echo json_encode(['status' => 'ok', 'message' => 'Nota aggiornata']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function delete() {
+    public function delete(): void
+    {
         header('Content-Type: application/json');
         try {
             $id = $_GET['id'] ?? null;
-            if (!$id) throw new \Exception("ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $noteModel = new \App\Models\NoteTecniche($db);
-            $noteModel->delete($id);
-            
+            if (!$id) {
+                throw new \RuntimeException('ID mancante');
+            }
+            $this->noteModel->delete((int)$id);
             echo json_encode(['status' => 'ok', 'message' => 'Nota eliminata']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
+}
+
+if (!class_exists('NoteController', false)) {
+    class_alias(\App\Controllers\NoteController::class, 'NoteController');
 }

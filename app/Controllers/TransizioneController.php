@@ -1,90 +1,98 @@
 <?php
 
-require_once BASE_PATH . '/app/Controllers/ApiController.php';
+declare(strict_types=1);
 
-class TransizioneController extends ApiController {
+namespace App\Controllers;
 
-    public function show() {
+use App\Database\Connection;
+use App\Models\Transizione;
+
+class TransizioneController extends ApiController
+{
+    private Transizione $transizioneModel;
+
+    public function __construct()
+    {
+        $this->transizioneModel = new Transizione(Connection::getInstance());
+    }
+
+    public function show(): void
+    {
         header('Content-Type: application/json');
         try {
-            $media_id = $_GET['media_id'] ?? null;
-            if (!$media_id) throw new \Exception("Media ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $transizioneModel = new \App\Models\Transizione($db);
-            $transizione = $transizioneModel->getByMedia($media_id);
-            
-            echo json_encode(['status' => 'ok', 'data' => $transizione]);
-        } catch (\Exception $e) {
+            $mediaId = $_GET['media_id'] ?? null;
+            if (!$mediaId) {
+                throw new \RuntimeException('Media ID mancante');
+            }
+            echo json_encode(['status' => 'ok', 'data' => $this->transizioneModel->getByMedia((int)$mediaId)]);
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function create() {
+    public function create(): void
+    {
         header('Content-Type: application/json');
         try {
-            $data = json_decode(file_get_contents('php://input'), true);
-            $db = (new DatabaseConnector())->getConnection();
-            $transizioneModel = new \App\Models\Transizione($db);
-            
-            $id = $transizioneModel->create($data);
+            $data = $this->getJsonInput();
+            $id = $this->transizioneModel->create($data);
             echo json_encode(['status' => 'ok', 'id' => $id, 'message' => 'Transizione creata']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function update() {
+    public function update(): void
+    {
         header('Content-Type: application/json');
         try {
-            $media_id = $_GET['media_id'] ?? null;
-            if (!$media_id) throw new \Exception("Media ID mancante");
-            
-            $data = json_decode(file_get_contents('php://input'), true);
-            $db = (new DatabaseConnector())->getConnection();
-            $transizioneModel = new \App\Models\Transizione($db);
-            
-            $transizioneModel->update($media_id, $data);
+            $mediaId = $_GET['media_id'] ?? null;
+            if (!$mediaId) {
+                throw new \RuntimeException('Media ID mancante');
+            }
+            $data = $this->getJsonInput();
+            $this->transizioneModel->update((int)$mediaId, $data);
             echo json_encode(['status' => 'ok', 'message' => 'Transizione aggiornata']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function delete() {
+    public function delete(): void
+    {
         header('Content-Type: application/json');
         try {
-            $media_id = $_GET['media_id'] ?? null;
-            if (!$media_id) throw new \Exception("Media ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $transizioneModel = new \App\Models\Transizione($db);
-            $transizioneModel->delete($media_id);
-            
+            $mediaId = $_GET['media_id'] ?? null;
+            if (!$mediaId) {
+                throw new \RuntimeException('Media ID mancante');
+            }
+            $this->transizioneModel->delete((int)$mediaId);
             echo json_encode(['status' => 'ok', 'message' => 'Transizione eliminata']);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
 
-    public function getOrCreate() {
+    public function getOrCreate(): void
+    {
         header('Content-Type: application/json');
         try {
-            $media_id = $_GET['media_id'] ?? null;
-            if (!$media_id) throw new \Exception("Media ID mancante");
-            
-            $db = (new DatabaseConnector())->getConnection();
-            $transizioneModel = new \App\Models\Transizione($db);
-            $transizione = $transizioneModel->getOrCreate($media_id);
-            
-            echo json_encode(['status' => 'ok', 'data' => $transizione]);
-        } catch (\Exception $e) {
+            $mediaId = $_GET['media_id'] ?? null;
+            if (!$mediaId) {
+                throw new \RuntimeException('Media ID mancante');
+            }
+            echo json_encode(['status' => 'ok', 'data' => $this->transizioneModel->getOrCreate((int)$mediaId)]);
+        } catch (\Throwable $e) {
             http_response_code(500);
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
+}
+
+if (!class_exists('TransizioneController', false)) {
+    class_alias(\App\Controllers\TransizioneController::class, 'TransizioneController');
 }

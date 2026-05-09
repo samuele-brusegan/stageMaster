@@ -1,49 +1,52 @@
 <?php
 
+declare(strict_types=1);
+
+namespace App\Controllers;
+
+use App\Database\Connection;
 use App\Models\PlayerState;
 
-class PlayerStateController extends ApiController {
-    private $stateModel;
+class PlayerStateController extends ApiController
+{
+    private PlayerState $stateModel;
 
-    public function __construct() {
-        $database = new DatabaseConnector();
-        $this->stateModel = new PlayerState($database->getConnection());
+    public function __construct()
+    {
+        $this->stateModel = new PlayerState(Connection::getInstance());
     }
 
-    /**
-     * API: Get state of all components
-     */
-    public function index() {
-        $states = $this->stateModel->getAllStates();
-        $this->json($states);
+    public function index(): void
+    {
+        $this->json($this->stateModel->getAllStates());
     }
 
-    /**
-     * API: Get state of a specific component
-     */
-    public function show() {
+    public function show(): void
+    {
         $component = $_GET['component'] ?? null;
-        if (!$component) $this->error("Component is required");
-
-        $state = $this->stateModel->getState($component);
-        if (!$state) $this->error("Component state not found", 404);
-
+        if (!$component) {
+            $this->error('Component is required');
+        }
+        $state = $this->stateModel->getState((string)$component);
+        if (!$state) {
+            $this->error('Component state not found', 404);
+        }
         $this->json($state);
     }
 
-    /**
-     * API: Update state (called by Proiettore/Gobbo or Dashboard for control)
-     */
-    public function update() {
+    public function update(): void
+    {
         $data = $this->getJsonInput();
         if (!isset($data['component'])) {
-            $this->error("Component is required");
+            $this->error('Component is required');
         }
-
-        if ($this->stateModel->updateState($data['component'], $data)) {
-            $this->json(['message' => 'State updated successfully']);
-        } else {
-            $this->error("Failed to update state", 500);
+        if ($this->stateModel->updateState((string)$data['component'], $data)) {
+            $this->json(['status' => 'ok', 'message' => 'State updated successfully']);
         }
+        $this->error('Failed to update state', 500);
     }
+}
+
+if (!class_exists('PlayerStateController', false)) {
+    class_alias(\App\Controllers\PlayerStateController::class, 'PlayerStateController');
 }
