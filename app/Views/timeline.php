@@ -34,6 +34,25 @@
         .inspector-panel { transform: translateX(105%); transition: transform 0.18s ease; }
         .inspector-panel.open { transform: translateX(0); }
         .preview-frame video, .preview-frame img { width: 100%; height: 100%; object-fit: contain; }
+        #media-preview-tooltip {
+            position: fixed;
+            z-index: 80;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.12s ease;
+            background: rgba(15, 23, 42, 0.96);
+            border: 1px solid rgba(96, 165, 250, 0.4);
+            border-radius: 0.6rem;
+            padding: 0.5rem;
+            box-shadow: 0 12px 32px rgba(15, 23, 42, 0.55);
+            width: 240px;
+            color: #e2e8f0;
+            font-size: 11px;
+        }
+        #media-preview-tooltip.visible { opacity: 1; }
+        #media-preview-tooltip .tooltip-media { width: 100%; height: 130px; border-radius: 0.4rem; background: #020617; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        #media-preview-tooltip .tooltip-media img,
+        #media-preview-tooltip .tooltip-media video { width: 100%; height: 100%; object-fit: contain; }
     </style>
 </head>
 <body class="h-full text-slate-200 overflow-hidden">
@@ -122,6 +141,7 @@
         </main>
     </div>
 
+    <div id="media-preview-tooltip" role="tooltip" aria-hidden="true"></div>
     <script>
         let currentSlotId = null;
         let selectedMediaId = null;
@@ -299,7 +319,56 @@
                 selectMedia(media.id);
             });
             block.addEventListener('pointerdown', event => startPointerAction(event, media, block));
+            block.addEventListener('mouseenter', () => showMediaTooltip(media, block));
+            block.addEventListener('mouseleave', hideMediaTooltip);
             return block;
+        }
+
+        function mediaPreviewMarkup(media) {
+            const path = media.file_path || '';
+            const type = (media.tipo_media || '').toUpperCase();
+            if (type === 'FOTO') {
+                return `<img src="${path}" alt="">`;
+            }
+            if (type === 'AUDIO') {
+                return `<div class="text-blue-400 font-bold">AUDIO</div>`;
+            }
+            return `<video src="${path}" muted preload="metadata" playsinline></video>`;
+        }
+
+        function showMediaTooltip(media, anchor) {
+            if (pointerAction) return; // do not pop a tooltip while dragging/resizing
+            const tooltip = document.getElementById('media-preview-tooltip');
+            if (!tooltip) return;
+            const start = mediaStart(media);
+            const duration = mediaDuration(media);
+            const fileName = media.file_path ? media.file_path.split('/').pop() : '';
+            const friendly = media.friendly_name || fileName;
+            tooltip.innerHTML = `
+                <div class="tooltip-media mb-2">${mediaPreviewMarkup(media)}</div>
+                <p class="font-semibold truncate">${friendly}</p>
+                <p class="text-[10px] text-slate-400 truncate">${fileName}</p>
+                <p class="text-[10px] text-slate-400">${(media.tipo_media || '').toUpperCase()} - ${secondsToTime(start)} - ${secondsToTime(start + duration)} (${duration}s)</p>
+            `;
+            const rect = anchor.getBoundingClientRect();
+            const tooltipWidth = 240;
+            const tooltipHeight = 200;
+            let top = rect.top - tooltipHeight - 8;
+            if (top < 8) top = rect.bottom + 8;
+            let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
+            const maxLeft = window.innerWidth - tooltipWidth - 8;
+            left = Math.max(8, Math.min(left, maxLeft));
+            tooltip.style.top = `${top}px`;
+            tooltip.style.left = `${left}px`;
+            tooltip.classList.add('visible');
+            tooltip.setAttribute('aria-hidden', 'false');
+        }
+
+        function hideMediaTooltip() {
+            const tooltip = document.getElementById('media-preview-tooltip');
+            if (!tooltip) return;
+            tooltip.classList.remove('visible');
+            tooltip.setAttribute('aria-hidden', 'true');
         }
 
         function mediaTypeIcon(type) {

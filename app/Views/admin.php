@@ -1651,15 +1651,19 @@
             media.forEach(m => {
                 const item = document.createElement('div');
                 item.className = 'p-3 rounded-lg bg-slate-800/50 border border-slate-700 flex justify-between items-center';
+                const previewItem = { file_type: m.tipo_media, file_path: m.file_path };
+                const fileName = (m.file_path || '').split('/').pop();
+                const friendly = m.friendly_name || fileName;
                 item.innerHTML = `
                     <div class="flex items-center gap-3 min-w-0">
                         <input type="checkbox" ${selectedItems.media.has(String(m.id)) ? 'checked' : ''} onchange="setSelected('media', ${m.id}, this.checked)">
+                        ${getMediaPreviewMarkup(previewItem, 'w-12 h-9 shrink-0')}
                         <div class="min-w-0">
-                        <span class="text-sm font-bold">${m.file_path}</span>
-                        <span class="text-xs text-slate-500 ml-2">${m.tipo_media}</span>
+                            <p class="text-sm font-bold truncate">${escapeHtml(friendly)}</p>
+                            <p class="text-xs text-slate-500 truncate">${escapeHtml(m.file_path)} - ${m.tipo_media}</p>
                         </div>
                     </div>
-                    <button onclick="deleteMedia(${m.id})" class="p-2 hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-400">
+                    <button onclick="deleteMedia(${m.id})" class="p-2 hover:bg-red-900/30 rounded-lg text-slate-400 hover:text-red-400" title="Elimina">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     </button>
                 `;
@@ -1960,15 +1964,16 @@
                         </button>`
                     : '';
                 item.innerHTML = `
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 min-w-0">
                         <input type="checkbox" ${selectedItems.library.has(String(m.id)) ? 'checked' : ''} onchange="setSelected('library', ${m.id}, this.checked)">
+                        ${getMediaPreviewMarkup(m, 'w-14 h-10 shrink-0')}
                         <span class="px-2 py-0.5 rounded text-[10px] ${m.file_type === 'VIDEO' ? 'bg-red-500/20 text-red-400' : m.file_type === 'FOTO' ? 'bg-green-500/20 text-green-400' : 'bg-blue-500/20 text-blue-400'} border border-current">${m.file_type}</span>
-                        <div>
-                            <p class="font-semibold">${escapeHtml(m.file_name)}</p>
-                            <p class="text-xs text-slate-500">${escapeHtml(m.file_path)}</p>
+                        <div class="min-w-0">
+                            <p class="font-semibold truncate">${escapeHtml(m.file_name)}</p>
+                            <p class="text-xs text-slate-500 truncate">${escapeHtml(m.file_path)}</p>
                         </div>
                     </div>
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 shrink-0">
                         ${durationBadge}
                         <span class="text-xs text-slate-500">${formatFileSize(m.file_size)}</span>
                         ${refreshBtn}
