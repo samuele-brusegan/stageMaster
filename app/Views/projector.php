@@ -15,6 +15,24 @@
         #main-video,
         #audio-label,
         #empty-label { visibility: hidden !important; }
+        /* Lightweight cursor indicator: a small dot that follows the real pointer
+           and fades away after a short period of inactivity, mirroring the
+           screen-preview dots used in the dashboard. */
+        #cursor-dot {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 8px;
+            height: 8px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.55);
+            pointer-events: none;
+            opacity: 0;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.18s ease;
+            z-index: 100;
+        }
     </style>
 </head>
 <body class="h-full flex items-center justify-center overflow-hidden">
@@ -26,6 +44,8 @@
     
     <!-- Fade Overlay -->
     <div id="fade-overlay" class="fixed inset-0 bg-black pointer-events-none opacity-100 transition-opacity duration-1000"></div>
+
+    <div id="cursor-dot" aria-hidden="true"></div>
 
     <!-- Click to Sync Overlay -->
     <div id="sync-overlay" class="fixed top-4 right-4 bg-slate-900/90 border border-slate-700 rounded-2xl p-3 z-50 transition-opacity duration-500">
@@ -511,6 +531,26 @@
                 video.pause();
                 fadeOut();
             }
+        });
+
+        // Cursor-dot indicator: show a small dot on pointer movement, auto-hide
+        // after a short delay (same UX as the dashboard screen-preview dots).
+        const cursorDot = document.getElementById('cursor-dot');
+        let cursorDotTimer = null;
+        function showCursorDot(event) {
+            if (!cursorDot) return;
+            cursorDot.style.left = `${event.clientX}px`;
+            cursorDot.style.top = `${event.clientY}px`;
+            cursorDot.style.opacity = '0.85';
+            if (cursorDotTimer) clearTimeout(cursorDotTimer);
+            cursorDotTimer = setTimeout(() => {
+                cursorDot.style.opacity = '0';
+            }, 2000);
+        }
+        document.addEventListener('mousemove', showCursorDot);
+        document.addEventListener('mouseleave', () => {
+            if (cursorDot) cursorDot.style.opacity = '0';
+            if (cursorDotTimer) clearTimeout(cursorDotTimer);
         });
 
         // Initialize with black screen
